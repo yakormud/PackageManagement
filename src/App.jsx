@@ -31,7 +31,7 @@ const App = () => {
   //let auth;
 
   return (
-    <Router>
+    <Router basename="/PackageManagement">
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

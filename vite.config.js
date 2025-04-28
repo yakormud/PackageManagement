@@ -7,8 +7,8 @@ import react from '@vitejs/plugin-react'
 // })
 export default defineConfig({
   plugins: [react()],
+  base: "/PackageManagement",
   server: {
     host: '0.0.0.0',
   },
-  base: '/PackageManagement',
 });
