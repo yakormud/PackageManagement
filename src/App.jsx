@@ -20,8 +20,8 @@ import DormRoomManagement from './pages/dormRoom/DormRoomManagement';
 import DeliverPackage from './pages/packager/DeliverPackage';
 import DormCreate from './pages/dorm/DormCreate';
 import DormJoin from './pages/request/DormJoin';
-import TenantPackage from './pages/packager/tenantPackage';
-import TenantQRCode from './pages/packager/tenantQRCode';
+import TenantPackage from './pages/packager/TenantPackage';
+import TenantQRCode from './pages/packager/TenantQRCode';
 import AddPackage from './pages/packager/AddPackage';
 import Test from './pages/test/Test';
 
