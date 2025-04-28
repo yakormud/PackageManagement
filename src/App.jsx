@@ -1,72 +1,76 @@
-import React, { useState, useEffect } from "react";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
-import QRCode from "react-qr-code"; // Import react-qr-code for generating QR codes
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './Layout';
 
-function App() {
-  const [data, setData] = useState("Not Found");
-  const [cameraAllowed, setCameraAllowed] = useState(true); // To track camera permission
-  const [cameraError, setCameraError] = useState(null);
-  const [qrInput, setQrInput] = useState(""); // Input for QR code generation
 
-  const handleRetryCameraAccess = () => {
-    // Function to retry camera access
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then(() => {
-        setCameraAllowed(true);
-        setCameraError(null); // Reset error when camera access is granted
-      })
-      .catch((err) => {
-        console.error("Camera permission denied", err);
-        setCameraAllowed(false);
-        setCameraError("Camera permission denied.");
-      });
-  };
+import Dashboard from './pages/dashboard/Dashboard';
 
-  useEffect(() => {
-    // On mount, check camera permissions
-    handleRetryCameraAccess();
-  }, []);
+import Unknown from './pages/unknown/Unknown'
+
+import Login from './pages/login/Login';
+import Register from './pages/login/Register';
+import Dorm from './pages/dormRoom/DormRoomManagement';
+import DormInfo from './pages/dorm/DormInfo';
+import DormLayout from './pages/dorm/DormLayout';
+import DormPackage from './pages/packager/dormPackage';
+import DormQRCode from './pages/dorm/DormQRCode';
+import DormRequest from './pages/request/DormRequest';
+import DormUserManagement from './pages/dormUser/DormUserManagement';
+import DormRoomManagement from './pages/dormRoom/DormRoomManagement';
+import DeliverPackage from './pages/packager/DeliverPackage';
+import DormCreate from './pages/dorm/DormCreate';
+import DormJoin from './pages/request/DormJoin';
+import TenantPackage from './pages/packager/tenantPackage';
+import TenantQRCode from './pages/packager/tenantQRCode';
+import AddPackage from './pages/packager/AddPackage';
+import Test from './pages/test/Test';
+
+const App = () => {
+
+  // const { auth } = useContext(AuthContext);
+  //let auth;
 
   return (
-    <>
-      {/* Barcode Scanner Section */}
-      {cameraAllowed ? (
-        <BarcodeScannerComponent
-          width={500}
-          height={500}
-          onUpdate={(err, result) => {
-            if (result) {
-              setData(result.text);
-            } else {
-              setData("Not Found");
-            }
-          }}
-        />
-      ) : (
-        <div>
-          <p>{cameraError || "Camera access denied"}</p>
-          <button onClick={handleRetryCameraAccess}>Allow Camera Access</button>
-        </div>
-      )}
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path='/test' element={<Test />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/dashboard" />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path='create-dorm' element={<DormCreate/>}/>
+          <Route path='join-dorm' element={<DormJoin/>}/>
 
-      <p>Scan Result: {data}</p>
+          <Route path="dorm/:id" element={<DormLayout />}>
+            <Route index element={<Navigate to="./info"/>} /> 
 
-      {/* QR Code Generator Section */}
-      <h3>Generate a QR Code</h3>
-      <input
-        type="text"
-        value={qrInput}
-        onChange={(e) => setQrInput(e.target.value)}
-        placeholder="Enter text for QR Code"
-      />
-      {qrInput && (
-        <div style={{ marginTop: "20px" }}>
-          <QRCode value={qrInput} />
-        </div>
-      )}
-    </>
+            <Route path="info" element={<DormInfo />} />
+            <Route path="qrinvite" element={<DormQRCode/>}/>
+            <Route path="requests" element={<DormRequest/>}/>
+            <Route path="users" element={<DormUserManagement/>}/>
+            <Route path="rooms" element={<DormRoomManagement/>}/>
+
+
+            <Route path="mypackage" element={<TenantPackage />} />
+            <Route path="myqrcode" element={<TenantQRCode/>} />
+
+            <Route path="allpackage" element={<DormPackage />} />
+            <Route path="deliver" element={<DeliverPackage/>}/>
+            <Route path='addpackage' element={<AddPackage/>}/>
+            {/* <Route path="packages" element={<DormPackages />} /> */}
+            {/* <Route path="users" element={<DormUsers />} /> */}
+            {/* <Route path="rooms" element={<DormRooms />} /> */}
+            {/* etc... */}
+          </Route>
+
+          <Route path="*" element={<Unknown />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 }
 
-export default App;
+export default App
