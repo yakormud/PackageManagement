@@ -43,6 +43,7 @@ const Dashboard = () => {
   return (
     <div className='dashboard-container'>
       <h1>หน้าหลัก</h1>
+      <p onClick={() => navigate('/test')}>go to test</p>
       <p>คุณมีรายการพัสดุที่รอการรับทั้งหมด {packages.length} ชิ้น</p>
 
       <div className="package-container">
