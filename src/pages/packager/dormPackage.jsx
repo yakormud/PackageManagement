@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api, { BASE_URL } from '../../utils/api';
 import PackageEditModal from './PackageEditModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBarcode } from '@fortawesome/free-solid-svg-icons';
 
 const DormPackage = () => {
   const { id } = useParams(); // dormID from URL
@@ -10,6 +12,8 @@ const DormPackage = () => {
 
   const [selectedPackage, setSelectedPackage] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  const [search, setSearch] = useState('');
 
   const navigate = useNavigate();
 
@@ -35,7 +39,16 @@ const DormPackage = () => {
         <h2>รายการพัสดุทั้งหมด</h2>
         <a onClick={() => navigate(`/dorm/${id}/deliver`)}>นำจ่ายพัสดุ</a>
       </div>
-      <div className="line-wrap">
+
+      <input
+      type="text"
+      className="myinput"
+      placeholder="🔍 ค้นด้วยเลขพัสดุ / เลขห้อง / ชื่อผู้รับ"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+
+      <div className="line-wrap" style={{marginTop:"15px"}}>
         <div
           className={`line-item ${selectedStatus === 'wait_for_deliver' ? 'selected' : ''}`}
           onClick={() => setSelectedStatus('wait_for_deliver')}
@@ -57,10 +70,10 @@ const DormPackage = () => {
               <img src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : `${BASE_URL}/packages/default.png`} alt="package" />
             </div>
             <div className="package-info">
-              <p><strong>หอพัก {pkg.dormID} ห้องพัก {pkg.recipientRoomNo}</strong></p>
-              <p>เจ้าของพัสดุ: {pkg.recipientName}</p>
-              <p>เข้าสู่ระบบเมื่อ: {new Date(pkg.registerTime).toLocaleString()}</p>
-              <p>ผู้นำเข้าสู่ระบบ: {pkg.registerBy}</p>
+              <h2>{pkg.recipientRoomNo} | {pkg.recipientName}</h2>
+              <h3 style={{color:"#191970"}}><FontAwesomeIcon icon={faBarcode}/> {pkg.trackingNo}</h3>
+              <p>🗓️ เข้าสู่ระบบเมื่อ: {new Date(pkg.registerTime).toLocaleString()}</p>
+              <p>👤 เพิ่มโดย: {pkg.registerBy}</p>
             </div>
             {pkg.status == 'wait_for_deliver' &&
               <div className="package-action">
