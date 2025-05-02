@@ -1,12 +1,11 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './Layout';
+import RequireAuth from './RequireAuth';
 
 
 import Dashboard from './pages/dashboard/Dashboard';
-
 import Unknown from './pages/unknown/Unknown'
-
 import Login from './pages/login/Login';
 import Register from './pages/login/Register';
 import Dorm from './pages/dormRoom/DormRoomManagement';
@@ -36,7 +35,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/test' element={<Test />} />
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
           <Route index element={<Navigate to="/dashboard" />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path='create-dorm' element={<DormCreate/>}/>
