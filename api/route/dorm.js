@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const database = require('../database');
+const authenticateToken = require('../middlewares/authenticateToken');
 
 // ตั้งค่า storage ของ multer เพื่อบันทึกไฟล์ที่อัปโหลด
 const storage = multer.diskStorage({
@@ -78,7 +79,7 @@ router.post('/create', upload.single('picture'), (req, res) => {
     );
 });
 
-router.get('/info/:id', (req, res) => {
+router.get('/info/:id', authenticateToken , (req, res) => {
     const dormId = req.params.id;
     console.log(dormId)
 
