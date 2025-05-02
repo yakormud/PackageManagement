@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faQrcode } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faQrcode } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import api, { BASE_URL } from '../../utils/api';
 import UserQRCode from '../packager/userQRCode';
 import SendEmailButton from './SendEmailButton';
+import packagePic from '../../assets/package-large.png'
+import hotelPic from '../../../image/dorm1.png'
+import hotelPic2 from '../../../image/dorm2.png'
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,11 +45,20 @@ const Dashboard = () => {
 
   return (
     <div className='dashboard-container'>
-      <h1>หน้าหลัก</h1>
-      <p onClick={() => navigate('/test')}>go to test</p>
-      <p>คุณมีรายการพัสดุที่รอการรับทั้งหมด {packages.length} ชิ้น</p>
+      <h2>หน้าหลัก</h2>
+      <div className='dashboard-package-container'>
+        <div className="flex-between-menu" style={{width:"100%"}}>
+          <div className='package-title'>
+            <p>จำนวนพัสดุที่ยังไม่ได้รับ</p>
+            <h1>{packages.length} รายการ</h1> 
 
-      <div className="package-container">
+          </div>
+          <img src={packagePic}></img>
+        </div>
+        <div className='mybtn btn-peel' onClick={() => navigate('/mypackage')}>ไปยังหน้ารวมพัสดุของฉัน <FontAwesomeIcon icon={faArrowRight}/></div>
+      </div>
+
+      {/* <div className="package-container">
         {packages.map(pkg => (
           <div className="package-card" key={pkg.id}>
             <div className="package-image">
@@ -71,28 +83,59 @@ const Dashboard = () => {
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
 
-      <div className='flex-between-menu'>
+      <h2>หอพักของคุณ</h2>
+
+      {/* <div className='flex-between-menu'>
         <p>หอพักของคุณ</p>
         <a onClick={() => navigate('/join-dorm')}>เข้าร่วมหอพัก</a>
         <a onClick={() => navigate('/create-dorm')}>สร้างหอพัก</a>
-      </div>
+      </div> */}
 
       <div className="dorm-container">
         {dorms.map(dorm => (
-          <div className="dorm-card" key={dorm.id}>
+          <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
             <div className="dorm-image">
-              <img src="/image/dorm1.jpg" alt="dorm" />
+              {dorm.id == 2 ? (
+                <img src={hotelPic2} alt="dorm" />
+              ) : (
+                <img src={hotelPic} alt="dorm" />
+              )}
             </div>
             <div className="dorm-info">
-              <p><strong>หอพัก {dorm.dormName}</strong></p>
-              <p>คุณอยู่ในหอในบทบาท: {dorm.role}</p>
+              <p>{dorm.dormName}</p>
+              <div className="mybtn btn-icon btn-black"><FontAwesomeIcon icon={faArrowRight}/></div>
             </div>
-            <div className="dorm-action">
-              <button className="go-button" onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
-                ไปยังหอพัก
-              </button>
+          </div>
+        ))}
+        {dorms.map(dorm => (
+          <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
+            <div className="dorm-image">
+              {dorm.id == 2 ? (
+                <img src={hotelPic2} alt="dorm" />
+              ) : (
+                <img src={hotelPic} alt="dorm" />
+              )}
+            </div>
+            <div className="dorm-info">
+              <p>{dorm.dormName}</p>
+              <div className="mybtn btn-icon btn-black"><FontAwesomeIcon icon={faArrowRight}/></div>
+            </div>
+          </div>
+        ))}
+        {dorms.map(dorm => (
+          <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
+            <div className="dorm-image">
+              {dorm.id == 2 ? (
+                <img src={hotelPic2} alt="dorm" />
+              ) : (
+                <img src={hotelPic} alt="dorm" />
+              )}
+            </div>
+            <div className="dorm-info">
+              <p>{dorm.dormName}</p>
+              <div className="mybtn btn-icon btn-black"><FontAwesomeIcon icon={faArrowRight}/></div>
             </div>
           </div>
         ))}
