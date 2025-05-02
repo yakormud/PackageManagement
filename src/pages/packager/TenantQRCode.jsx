@@ -31,15 +31,16 @@ const TenantQRCode = () => {
   }, [id]);
 
   return (
-    <div>
+    <div className='page-content'>
       <h2>QR Code รับพัสดุ</h2>
-      <p>ใช้สำหรับแสดงให้เจ้าหน้าที่ สำหรับการยืนยันการรับพัสดุ</p>
+      <p>ใช้สำหรับแสดงให้เจ้าหน้าที่ยืนยันตัวตน</p>
+      <p>สำหรับการเข้ารับพัสดุ</p>
       <div style={{ marginTop: '20px' }}>
         {code && <QRCode value={code} />}
       </div>
-      <p>รหัส Code: {code || 'ไม่พบโค้ด'}</p>
+      <p style={{margin:"10px 0px"}}>รหัส Code: {code || 'ไม่พบโค้ด'}</p>
 
-      <button className="mybutton" onClick={() => navigate(`/dorm/${id}/mypackage`)}>
+      <button className="mybtn btn-normal" style={{marginTop:"30px"}} onClick={() => navigate(`/dorm/${id}/mypackage`)}>
         กลับไปหน้าพัสดุของฉัน
       </button>
     </div>
