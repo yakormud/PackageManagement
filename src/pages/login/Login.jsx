@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import api from '../../utils/api';
 import { useNavigate } from 'react-router-dom';
+
+import { AuthContext } from '../../AuthContext';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -13,6 +16,12 @@ const Login = () => {
 
     try {
       const res = await api.post('/user/login', { username, password });
+
+      //Save token ลง local storage
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      login(res.data.user, res.data.token);
+
       alert('Successful Login');
       navigate('/dashboard');
 
@@ -24,6 +33,7 @@ const Login = () => {
 
   return (
     <div className="login-container">
+      
       <form className="login-form" onSubmit={handleSubmit}>
         <h2 className="login-title">เข้าสู่ระบบ</h2>
 

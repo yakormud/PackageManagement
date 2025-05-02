@@ -24,7 +24,7 @@ const Register = () => {
       navigate('/dashboard');
     } catch (err) {
       console.error('Registration failed:', err);
-      alert('Registration failed');
+      alert("ERROR:\n" + err.response.data.message);
     }
   };
 

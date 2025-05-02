@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const database = require('../database'); 
 
+//json web token
+const jwt = require('jsonwebtoken');
+const authenticateToken = require('../middlewares/authenticateToken');
+const SECRET_KEY = process.env.JWT_SECRET;
+
 
 router.get('/users', (req, res) => {
   const query = 'SELECT * FROM user'; 
@@ -19,7 +24,7 @@ router.get('/users', (req, res) => {
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  const query = 'SELECT * FROM user WHERE username = ? AND password = ?';
+  const query = 'SELECT id,username FROM user WHERE username = ? AND password = ?';
 
   database.query(query, [username, password], (err, results) => {
     if (err) {
@@ -29,7 +34,17 @@ router.post('/login', (req, res) => {
     }
 
     if (results.length > 0) {
-      res.json({ message: 'Login successful', user: results[0] });
+      const user = results[0];
+
+      //สร้าง TOKEN 
+      const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, {
+        expiresIn: '60m',
+      });
+      res.json({ message: 'Login successful', token, user });
+
+      console.log("token: ", token)
+      console.log("user: ", user)
+
     } else {
       res.status(401).json({ message: 'Invalid username or password' });
     }
@@ -68,6 +83,11 @@ router.post('/register', (req, res) => {
 
   })
 
+});
+
+//Check Token
+router.get('/verify-token', authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user }); 
 });
 
 module.exports = router;
