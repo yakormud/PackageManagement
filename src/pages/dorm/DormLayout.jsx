@@ -6,8 +6,8 @@ const DormLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  //const user = 'owner'; 
-  const user = 'manager';
+  const user = 'owner'; 
+  //const user = 'manager';
   //const user = 'tenant';
 
   const isActive = (path) => location.pathname.endsWith(path);
@@ -37,9 +37,9 @@ const DormLayout = () => {
             </>
           ) : (
             <>
-              <a onClick={() => navigate('./info')} className={`peel-tab ${isActive('info') ? 'peel-active' : ''}`}>ข้อมูลหอพัก</a>
-              <a onClick={() => navigate('./myqrcode')} className={`peel-tab ${isActive('myqrcode') ? 'peel-active' : ''}`}>QR Code รับพัสดุ</a>
-              <a onClick={() => navigate('./mypackage')} className={`peel-tab ${isActive('mypackage') ? 'peel-active' : ''}`}>พัสดุของฉัน</a>
+              <p onClick={() => navigate('./info')} className={`peel-tab ${isActive('info') ? 'peel-active' : ''}`}>ข้อมูลหอพัก</p>
+              <p onClick={() => navigate('./myqrcode')} className={`peel-tab ${isActive('myqrcode') ? 'peel-active' : ''}`}>QR Code รับพัสดุ</p>
+              <p onClick={() => navigate('./mypackage')} className={`peel-tab ${isActive('mypackage') ? 'peel-active' : ''}`}>พัสดุของฉัน</p>
             </>
           )}
         </div>
