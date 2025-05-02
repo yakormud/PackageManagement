@@ -14,6 +14,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if(username == 'dev'){
+      localStorage.setItem('backend_url', password);
+      alert(`Backend URL set to: ${password}`);
+      window.location.reload();
+      return;
+    }
+
     try {
       const res = await api.post('/user/login', { username, password });
 
