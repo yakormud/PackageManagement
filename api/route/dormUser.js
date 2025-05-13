@@ -67,7 +67,7 @@ router.post('/getByDormAndRole', (req, res) => {
 router.post('/getByUserID', (req, res) => {
   const { userID } = req.body;
   const query = `
-    SELECT ud.*, dorm.name AS dormName
+    SELECT ud.*, dorm.name AS dormName, dorm.pathToPicture 
     FROM user_dorm ud
     LEFT JOIN dormitory dorm ON ud.dormID = dorm.id
     WHERE ud.userID = ? 
@@ -152,6 +152,25 @@ router.post('/getAllUser', (req, res) => {
   database.query(query, [dormID], (err, results) => {
     if (err) return res.status(500).json({ message: 'Database error' });
     res.json(results);
+  });
+});
+
+// GET ROLE FOR DORM NAVBAR
+router.post('/getUserRoleByDorm', (req, res) => {
+  const { userID, dormID } = req.body;
+  console.log("userid ",userID)
+  console.log("dormID ",dormID)
+
+  const query = `
+    SELECT role FROM user_dorm 
+    WHERE userID = ? AND dormID = ?
+  `;
+
+  database.query(query, [userID, dormID], (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    if (results.length === 0) return res.status(404).json({ message: 'Role not found' });
+
+    res.json({ role: results[0].role });
   });
 });
 
