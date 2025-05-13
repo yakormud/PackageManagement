@@ -38,6 +38,7 @@ const Dashboard = () => {
     try {
       const res = await api.post('/dorm-user/getByUserID', { userID });
       setDorms(res.data);
+      console.log(res.data)
     } catch (err) {
       console.error('Failed to fetch dorms:', err);
     }
@@ -58,80 +59,15 @@ const Dashboard = () => {
         <div className='mybtn btn-peel' onClick={() => navigate('/mypackage')}>ไปยังหน้ารวมพัสดุของฉัน <FontAwesomeIcon icon={faArrowRight}/></div>
       </div>
 
-      {/* <div className="package-container">
-        {packages.map(pkg => (
-          <div className="package-card" key={pkg.id}>
-            <div className="package-image">
-              <img
-                src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : `${BASE_URL}/packages/default.png`}
-                alt="package"
-              />
-            </div>
-            <div className="package-info">
-              <p><strong>หอพัก {pkg.dormName} ห้องพัก {pkg.recipientRoomNo}</strong></p>
-              <p>ผู้รับ: {pkg.recipientName}</p>
-              <p>เข้าสู่ระบบเมื่อ: {new Date(pkg.registerTime).toLocaleString()}</p>
-              <p>ผู้นำเข้าสู่ระบบ: {pkg.registerBy}</p>
-            </div>
-            <div className="package-action">
-              <button className="qr-button" onClick={()=> {
-                setSelectedPackage(pkg.id)
-                setShowQrModal(true);
-              }}>
-                <FontAwesomeIcon icon={faQrcode} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div> */}
-
       <h2>หอพักของคุณ</h2>
-
-      {/* <div className='flex-between-menu'>
-        <p>หอพักของคุณ</p>
-        <a onClick={() => navigate('/join-dorm')}>เข้าร่วมหอพัก</a>
-        <a onClick={() => navigate('/create-dorm')}>สร้างหอพัก</a>
-      </div> */}
 
       <div className="dorm-container">
         {dorms.map(dorm => (
           <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
             <div className="dorm-image">
-              {dorm.id == 2 ? (
-                <img src={hotelPic2} alt="dorm" />
-              ) : (
-                <img src={hotelPic} alt="dorm" />
-              )}
-            </div>
-            <div className="dorm-info">
-              <p>{dorm.dormName}</p>
-              <div className="mybtn btn-icon btn-black"><FontAwesomeIcon icon={faArrowRight}/></div>
-            </div>
-          </div>
-        ))}
-        {dorms.map(dorm => (
-          <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
-            <div className="dorm-image">
-              {dorm.id == 2 ? (
-                <img src={hotelPic2} alt="dorm" />
-              ) : (
-                <img src={hotelPic} alt="dorm" />
-              )}
-            </div>
-            <div className="dorm-info">
-              <p>{dorm.dormName}</p>
-              <div className="mybtn btn-icon btn-black"><FontAwesomeIcon icon={faArrowRight}/></div>
-            </div>
-          </div>
-        ))}
-        {dorms.map(dorm => (
-          <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
-            <div className="dorm-image">
-              {dorm.id == 2 ? (
-                <img src={hotelPic2} alt="dorm" />
-              ) : (
-                <img src={hotelPic} alt="dorm" />
-              )}
+
+                <img src={(dorm.pathToPicture != '' && dorm.pathToPicture != undefined) ? `${BASE_URL}${dorm.pathToPicture}` : hotelPic}></img>
+
             </div>
             <div className="dorm-info">
               <p>{dorm.dormName}</p>

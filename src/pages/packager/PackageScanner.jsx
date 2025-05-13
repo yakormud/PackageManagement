@@ -1,50 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import BarcodeScannerComponent from 'react-qr-barcode-scanner';
+// components/PackageScanner.jsx
+import React, { useRef, useState } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
-const PackageScanner = ({ onDetected, onCancel }) => {
-    const [cameraAllowed, setCameraAllowed] = useState(true);
+const PackageScanner = ({ onDetected }) => {
+    const scannerRef = useRef(null);
+    const [manualCode, setManualCode] = useState('');
 
-    const handleRetryCameraAccess = () => {
-        navigator.mediaDevices
-            .getUserMedia({ video: true })
-            .then(() => {
-                setCameraAllowed(true);
-            })
-            .catch(() => {
-                setCameraAllowed(false);
-            });
-    };
+    React.useEffect(() => {
+        const config = {
+            fps: 10,
+            qrbox: {
+                width: 300,
+                height: 100, 
+            },
+            formatsToSupport: [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+            ],
+            disableFlip: false
+        };
 
-    useEffect(() => {
-        handleRetryCameraAccess();
-    }, []);
+        const scanner = new Html5QrcodeScanner(
+            'scanner',
+            config,
+            false
+        );
+
+        scanner.render(
+            (decodedText) => {
+                scanner.clear();
+                onDetected(decodedText);
+            },
+            (errorMessage) => {
+                // optional: console.warn(errorMessage);
+            }
+        );
+
+        return () => {
+            scanner.clear().catch(() => {});
+        };
+    }, [onDetected]);
 
     return (
-        <div className="scanner-overlay">
-            {cameraAllowed ? (
-                <>
-                    <BarcodeScannerComponent
-                        width={1000}
-                        height={400}
-                        delay={500}
-                        onUpdate={(err, result) => {
-                            if (result) {
-                                console.log(result.text)
-                            }
-                        }}
-                    />
-                    <button onClick={onCancel}>ยกเลิก</button>
-                </>
-            ) : (
-                <div style={{ textAlign: 'center' }}>
-                    <p>ไม่สามารถเปิดกล้องได้</p>
-                    <button onClick={handleRetryCameraAccess}>อนุญาตสิทธิ์การเข้าถึงกล้อง</button>
-                    <div><button onClick={onCancel}>ปิด</button></div>
-                </div>
-            )}
+        <div style={{ padding: 16 }}>
+            <h2 style={{ textAlign: 'center' }}>สแกนบาร์โค้ด / QR Code</h2>
+            <div id="scanner" style={{ marginBottom: 16 }} />
+
+            <div style={{ textAlign: 'center', marginTop: 16 }}>
+                <input
+                    placeholder="กรอกรหัสด้วยตนเอง"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value)}
+                    style={{ padding: 8, width: '80%', fontSize: 16 }}
+                />
+                <br />
+                <button
+                    onClick={() => manualCode && onDetected(manualCode)}
+                    style={{ marginTop: 12 }}
+                >
+                    ยืนยันรหัส
+                </button>
+            </div>
         </div>
     );
 };
 
 export default PackageScanner;
-

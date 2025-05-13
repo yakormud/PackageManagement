@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const BASE_URL = localStorage.getItem('backend_url') || 'http://localhost:3000/';
+export const BASE_URL = localStorage.getItem('backend_url') || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,

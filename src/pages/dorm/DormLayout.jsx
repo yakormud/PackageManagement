@@ -1,16 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
+import api from '../../utils/api';
 
 const DormLayout = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const user = 'owner'; 
-  //const user = 'manager';
-  //const user = 'tenant';
+  const [userRole, setUserRole] = useState(null);
 
   const isActive = (path) => location.pathname.endsWith(path);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const verifyRes = await api.get('/user/verify-token', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const userID = verifyRes.data.user.id;
+        console.log("USER ID: ", userID)
+
+        const roleRes = await api.post('/dorm-user/getUserRoleByDorm', {
+          userID: verifyRes.data.user.id,
+          dormID: id
+        });
+
+        setUserRole(roleRes.data.role);
+        console.log("USER ROLE: ", roleRes.data.role )
+      } catch (err) {
+        console.error('Failed to determine user role:', err);
+      }
+    };
+
+    fetchUserRole();
+  }, [id]);
 
   return (
     <div className='dorm-content'>
@@ -20,7 +47,7 @@ const DormLayout = () => {
         </div>
 
         <div className='nav-link'>
-          {user === 'owner' ? (
+          {userRole === 'owner' ? (
             <>
               <a onClick={() => navigate('./info')} className={`peel-tab ${isActive('info') ? 'peel-active' : ''}`}>ข้อมูลหอพัก</a>
               <a onClick={() => navigate('./qrinvite')} className={`peel-tab ${isActive('qrinvite') ? 'peel-active' : ''}`}>QR Code</a>
@@ -28,7 +55,7 @@ const DormLayout = () => {
               <a onClick={() => navigate('./users')} className={`peel-tab ${isActive('users') ? 'peel-active' : ''}`}>จัดการผู้ใช้งานในหอพัก</a>
               <a onClick={() => navigate('./rooms')} className={`peel-tab ${isActive('rooms') ? 'peel-active' : ''}`}>จัดการห้องพัก</a>
             </>
-          ) : user === 'manager' ? (
+          ) : userRole === 'manager' ? (
             <>
               <a onClick={() => navigate('./info')} className={`peel-tab ${isActive('info') ? 'peel-active' : ''}`}>ข้อมูลหอพัก</a>
               <a onClick={() => navigate('./allpackage')} className={`peel-tab ${isActive('allpackage') ? 'peel-active' : ''}`}>รายการพัสดุทั้งหมด</a>
