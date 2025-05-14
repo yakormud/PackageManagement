@@ -13,6 +13,16 @@ app.use(cors());
 require('dotenv').config();
 
 
+//Cert
+// const https = require('https');
+// const fs = require('fs');
+
+// const sslOptions = {
+//   key: fs.readFileSync('./key.pem'),
+//   cert: fs.readFileSync('./cert.pem')
+// };
+
+
 //import fetch
 const userLogin = require('./route/userLogin');
 const dorm = require('./route/dorm');
@@ -46,3 +56,9 @@ app.use('/email', email);
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });
+
+
+//HTTPS
+// https.createServer(sslOptions, app).listen(3000, '0.0.0.0', () => {
+//   console.log('✅ HTTPS server running at https://localhost:3000');
+// });
