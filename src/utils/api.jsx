@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 
-const DEV_API_URL = 'http://54.206.124.148:3000/';
-const PROD_API_URL = 'http://54.206.124.148:3000/'; 
+const DEV_API_URL = 'http://16.176.62.189:3000';
+const PROD_API_URL = 'http://16.176.62.189:3000'; 
 
 
 const isDev = import.meta.env.MODE === 'development';
@@ -27,4 +27,11 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+
+/*
+security group http port tcp 3000 0.0.0.0/0
+elastic ip 
+pm2
+
+*/
 
