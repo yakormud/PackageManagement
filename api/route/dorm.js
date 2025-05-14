@@ -26,7 +26,16 @@ function generateInviteCode() {
     return code;
 }
 
-router.post('/create', upload.single('picture'), (req, res) => {
+function generateUserCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+router.post('/create',authenticateToken, upload.single('picture'), (req, res) => {
     const { name, address, ownerName, phoneNo } = req.body;
 
 
@@ -58,10 +67,10 @@ router.post('/create', upload.single('picture'), (req, res) => {
 
         const dormId = result.insertId;
         const insertUserDormQuery = `
-        INSERT INTO user_dorm (fullName, role, roomID, userID, dormID)
-        VALUES (?, ?, ?, ?, ?)`;
+        INSERT INTO user_dorm (fullName, role, roomID, userID, dormID, code)
+        VALUES (?, ?, ?, ?, ?, ?)`;
 
-        const mockData = ['นันทกร', 'owner', '', '1', '1'];
+        const mockData = [ownerName, 'owner', 0, req.user.id, dormId, generateUserCode()];
 
         database.query(insertUserDormQuery, mockData, (err2, result2) => {
             if (err2) {

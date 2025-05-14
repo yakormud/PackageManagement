@@ -70,11 +70,10 @@ router.post('/getByUserID', (req, res) => {
     SELECT ud.*, dorm.name AS dormName, dorm.pathToPicture 
     FROM user_dorm ud
     LEFT JOIN dormitory dorm ON ud.dormID = dorm.id
-    WHERE ud.userID = ? 
-    GROUP BY ud.dormID
+    WHERE ud.userID = ?
   `;
   database.query(query, [userID], (err, results) => {
-    if (err) return res.status(500).json({ message: 'Database error' });
+    if (err) return res.status(500).json({ message: err });
     res.json(results);
   });
 });
