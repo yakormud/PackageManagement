@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 
-const DEV_API_URL = 'http://16.176.62.189:3000';
-const PROD_API_URL = 'http://16.176.62.189:3000'; 
+const DEV_API_URL = 'https://nunthakornlamor.site';
+const PROD_API_URL = 'https://nunthakornlamor.site'; 
 
 
 const isDev = import.meta.env.MODE === 'development';
