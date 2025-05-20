@@ -25,7 +25,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
                     { facingMode: "environment" }
                     , {
                         fps: 10,
-                        qrbox: { width: 300, height: 100 },
+                        qrbox: { width: '100%', height: '50' },
                     }, (text) => {
                         qr.stop();
                         setIsScanning(false);
@@ -61,6 +61,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
             <button className="go-back-button" onClick={onClose}><FontAwesomeIcon icon={faChevronLeft} /> ย้อนกลับ</button>
 
             <h2>แสกน QR Code</h2>
+            <p></p>
 
             <div id="qr-reader" className="qr-reader" />
 
