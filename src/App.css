@@ -779,10 +779,7 @@ label {
 }
 
 #qr-reader {
-  width: 50%;
-  overflow: hidden;
-  position: relative;
-  background: black;
+  width: 100%;
 }
 
 .scan-button-row {
@@ -863,14 +860,6 @@ label {
 
   .dorm-card {
     flex: 0 0 calc(33% - 13px);
-  }
-
-  #qr-reader {
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    border-radius: 8px;
-    background: black;
   }
 
 }

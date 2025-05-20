@@ -16,16 +16,13 @@ const PackageScanner = ({ onClose, onDetected }) => {
         try {
             const devices = await Html5Qrcode.getCameras();
             if (devices && devices.length) {
-                const width = Math.floor(window.innerWidth * 0.8);  // 60% ของความกว้างจอ
-                const height = 100;
-
-                console.log(width)
-                console.log(height)
                 await qr.start(
                     { facingMode: "environment" }
                     , {
                         fps: 10,
-                        qrbox: { width: '100%', height: '50' },
+                        qrbox: function (viewfinderWidth, viewfinderHeight) {
+                            return { width: 0.6 * viewfinderWidth, height: 0.2 * viewfinderHeight };
+                        }
                     }, (text) => {
                         qr.stop();
                         setIsScanning(false);
