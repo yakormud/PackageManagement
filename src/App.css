@@ -799,6 +799,7 @@ label {
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -868,6 +869,9 @@ label {
 
     .nav-link {
       width: 100%;
+      justify-content: start;
+      flex-wrap: nowrap;
+      overflow-x: auto;
     }
   }
 
@@ -889,9 +893,9 @@ label {
   }
 
   #qr-reader {
-  margin-top: 80px;
-  width: calc(90%);
-}
+    margin-top: 80px;
+    width: calc(90%);
+  }
 
 }
 
