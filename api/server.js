@@ -31,6 +31,7 @@ const request = require('./route/request');
 const dormRoom = require('./route/dormRoom');
 const dormUser = require('./route/dormUser');
 const email = require('./route/email');
+const dropdown = require('./route/dropdown');
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
@@ -50,6 +51,7 @@ app.use('/request', request);
 app.use('/dorm-room', dormRoom);
 app.use('/dorm-user', dormUser);
 app.use('/email', email);
+app.use('/dropdown', dropdown);
 
 
 //Start server
