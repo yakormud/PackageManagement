@@ -63,7 +63,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
         setIsScanning(false);
         const qr = new Html5Qrcode("qr-reader");
         try {
-            const result = await qr.scanFile(file, true);
+            const result = await qr.scanFile(file, false);
             onDetected(result);
         } catch (error) {
             setIsPicScan(true);
@@ -88,7 +88,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
                 </div>
             )}
             <div id="qr-reader" className="qr-reader" />
-            {isPicScan && <p>ไม่สามารถอ่านค่าจากรูปดังกล่าวได้</p>}
+            {isPicScan && <p style={{marginTop:"50px", marginBottom:"50px"}}>ไม่สามารถอ่านค่าจากรูปดังกล่าวได้</p>}
 
             <div className="scan-button-row">
 
