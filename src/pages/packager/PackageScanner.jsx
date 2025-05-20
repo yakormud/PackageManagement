@@ -8,9 +8,12 @@ const PackageScanner = ({ onClose, onDetected }) => {
     const [manualCode, setManualCode] = useState('');
     const [isScanning, setIsScanning] = useState(false);
 
+
+    const [isPicScan, setIsPicScan] = useState(false)
     const [cameraErr, setCameraErr] = useState(null);
 
     const startCamera = async () => {
+        setIsPicScan(false);
         if (isScanning) {
             console.log("RETURN")
             return;
@@ -54,18 +57,27 @@ const PackageScanner = ({ onClose, onDetected }) => {
     };
 
     const scanImageFile = async (e) => {
+
         const file = e.target.files[0];
         if (!file) return;
+        setIsScanning(false);
         const qr = new Html5Qrcode("qr-reader");
-        const result = await qr.scanFile(file, true);
-        onDetected(result);
+        try {
+            const result = await qr.scanFile(file, true);
+            onDetected(result);
+        } catch (error) {
+            setIsPicScan(true);
+            console.warn("Scan failed:", error);
+        }
+
+        e.target.value = null;
     };
 
     return (
         <div className="scan-backdrop">
             <button className="go-back-button" onClick={onClose}><FontAwesomeIcon icon={faChevronLeft} /> ย้อนกลับ</button>
 
-            {!isScanning && (
+            {!isScanning && !isPicScan && (
                 <div className="no-scan">
                     <FontAwesomeIcon icon={faVideoSlash} color="white" />
                     <p>
@@ -76,14 +88,44 @@ const PackageScanner = ({ onClose, onDetected }) => {
                 </div>
             )}
             <div id="qr-reader" className="qr-reader" />
+            {isPicScan && <p>ไม่สามารถอ่านค่าจากรูปดังกล่าวได้</p>}
 
             <div className="scan-button-row">
-                {!isScanning && <label onClick={() => startCamera()} className='mybtn btn-peel btn-white'>📷 เรียกใช้กล้อง</label>}
-                {/* <button onClick={stopCamera}>🛑 หยุด</button> */}
-                <label className="mybtn btn-peel btn-white">
-                    📁 แสกนจากรูปภาพ
-                    <input type="file" accept="image/*" onChange={scanImageFile} hidden />
-                </label>
+
+                {/* ตอนแสกน */}
+                {isScanning ? (
+                    <>
+                        <label onClick={() => stopCamera()} className='mybtn btn-peel btn-white'>📷 ปิดกล้อง</label>
+                        <label className="mybtn btn-peel btn-white">
+                            📁 แสกนจากรูปภาพ
+                            <input type="file" accept="image/*" onChange={scanImageFile} hidden />
+                        </label>
+                    </>
+                ) : isPicScan ? (
+                    <>  
+                    </>
+                ) : (
+                    <>
+                    <label onClick={() => startCamera()} className='mybtn btn-peel btn-white'>📷 เรียกใช้กล้อง</label>
+                        <label className="mybtn btn-peel btn-white">
+                            📁 แสกนจากรูปภาพ
+                            <input type="file" accept="image/*" onChange={scanImageFile} hidden />
+                        </label>
+                    </>
+                )}
+
+                {/* ตอนอัพรูปละไม่เจอรูป */}
+                {isPicScan && (
+                    <>
+                        <label onClick={() => startCamera()} className='mybtn btn-peel btn-white'>📷 แสกนจากกล้องแทน</label>
+                        <label className="mybtn btn-peel btn-white">
+                            📁 เลือกภาพใหม่
+                            <input type="file" accept="image/*" onChange={scanImageFile} hidden />
+                        </label>
+                    </>
+                )}
+
+
             </div>
 
             <div className="manual-input-row">

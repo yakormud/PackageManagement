@@ -774,7 +774,7 @@ label {
   z-index: 9999;
   box-sizing: border-box;
   overflow: auto;
-  animation: slideUp 0.4s ease;
+  /* animation: slideUp 0.4s ease; */
   color: white;
   scrollbar-gutter: stable both-edges;
 }
@@ -790,6 +790,7 @@ label {
 
   p {
     font-size: 1rem;
+    padding: 5%;
   }
 }
 
@@ -838,6 +839,7 @@ label {
   margin-top: 20px;
   width: 100%;
   max-width: 320px;
+  margin-bottom: 200px;
 }
 
 .manual-input-row input {
@@ -885,6 +887,11 @@ label {
   .dorm-card {
     flex: 0 0 calc(33% - 13px);
   }
+
+  #qr-reader {
+  margin-top: 80px;
+  width: calc(90%);
+}
 
 }
 
