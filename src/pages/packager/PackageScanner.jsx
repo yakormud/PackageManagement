@@ -25,7 +25,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
                     { facingMode: "environment" }
                     , {
                         fps: 10,
-                        qrbox: { width, height },
+                        qrbox: { width: 300, height: 100 },
                     }, (text) => {
                         qr.stop();
                         setIsScanning(false);
