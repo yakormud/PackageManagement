@@ -3,6 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const database = require('../database');
+const authenticateToken = require('../middlewares/authenticateToken');
+const getRole = require('../middlewares/getRole');
 
 
 const storage = multer.diskStorage({
@@ -17,53 +19,73 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-router.post('/add', upload.single('image'), (req, res) => {
-    const {
-        recipientRoomNo,
-        recipientName,
-        trackingNo,
-    } = req.body;
+router.post('/add', authenticateToken, upload.single('image'), async (req, res) => {
+  const {
+    recipientRoomNo,
+    recipientName,
+    trackingNo,
+    dormID
+  } = req.body;
+
+  const userID = req.user.id;
+
+  try {
+    // Check permission
+    const userRole = await getRole(userID, dormID);
+    if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
+      return res.status(403).json({ message: 'Permission denied' });
+    }
 
     const pathToPicture = req.file ? `/packages/${req.file.filename}` : '';
 
     const insertQuery = `
-    INSERT INTO package (
-      recipientName,
-      recipientRoomNo,
-      recipientID,
-      trackingNo,
-      pathToPicture,
-      status,
-      registerBy,
-      registerTime,
-      deliverBy,
-      deliverTime,
-      receiver,
-      dormID
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)
-  `;
-
-    const values = [
+      INSERT INTO package (
         recipientName,
         recipientRoomNo,
-        1, // mock recipientID
+        recipientID,
         trackingNo,
         pathToPicture,
-        'wait_for_deliver',
-        1, // mock registerBy
-        '', // deliverBy
-        null, // deliverTime
-        '', // receiver
-        1  // mock dormID
+        status,
+        registerBy,
+        registerTime,
+        deliverBy,
+        deliverTime,
+        receiver,
+        dormID
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)
+    `;
+
+    const values = [
+      recipientName,
+      recipientRoomNo,
+      userID, // ต้องแก้ ใส่ recipientID
+      trackingNo,
+      pathToPicture,
+      'wait_for_deliver',
+      userRole.fullName, // registered by
+      '',     // deliverBy
+      null,   // deliverTime
+      '',     // receiver
+      dormID
     ];
 
     database.query(insertQuery, values, (err, result) => {
-        if (err) {
-            console.error('Error inserting package:', err);
-            return res.status(500).json({ message: 'Database error' });
-        }
-        res.json({ message: 'Package added successfully' });
+      if (err) {
+        console.error('Error inserting package:', err);
+        return res.status(500).json({ message: 'Database error' });
+      }
+
+      res.json({
+        message: 'Package added successfully',
+        addedBy: userRole.fullName,
+        role: userRole.role
+      });
     });
+
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 //FOR manager
@@ -145,6 +167,28 @@ router.post('/update', (req, res) => {
         res.json({ message: 'Package updated successfully' });
     }
     );
+});
+
+
+router.post('/checkIfExist', (req, res) => {
+  const { trackingNo } = req.body;
+  if (!trackingNo) {
+    return res.status(400).json({ message: 'trackingNo is required' });
+  }
+
+  const query = `
+    SELECT * FROM package
+    WHERE trackingNo = ? AND status = 'wait_for_deliver'
+  `;
+
+  database.query(query, [trackingNo], (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    console.log(results)
+    res.json(results);
+  });
 });
 
 

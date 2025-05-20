@@ -23,6 +23,7 @@ import TenantPackage from './pages/packager/TenantPackage';
 import TenantQRCode from './pages/packager/TenantQRCode';
 import AddPackage from './pages/packager/AddPackage';
 import Test from './pages/test/Test';
+import AddPackageForm from './pages/packager/AddPackageForm';
 
 const App = () => {
 
@@ -57,6 +58,7 @@ const App = () => {
             <Route path="allpackage" element={<DormPackage />} />
             <Route path="deliver" element={<DeliverPackage/>}/>
             <Route path='addpackage' element={<AddPackage/>}/>
+            <Route path="addpackage/form" element={<AddPackageForm />} />
             {/* <Route path="packages" element={<DormPackages />} /> */}
             {/* <Route path="users" element={<DormUsers />} /> */}
             {/* <Route path="rooms" element={<DormRooms />} /> */}
