@@ -852,7 +852,21 @@ label {
   outline: none;
 }
 
+/* ADD PACKAGE */
+.add-package-form {
+  p {
+    margin: 5px;
+  }
+}
+.edit-track {
+  font-size: 1.1rem;
+  color: #0056b3;
+  margin-left: 20px;
+}
 
+input[type="text"] {
+  box-sizing: border-box;
+}
 
 
 /* LAPTOP */
