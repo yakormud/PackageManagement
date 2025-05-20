@@ -16,14 +16,20 @@ const PackageScanner = ({ onClose, onDetected }) => {
         try {
             const devices = await Html5Qrcode.getCameras();
             if (devices && devices.length) {
-                await qr.start(devices[0].id, {
-                    fps: 10,
-                    qrbox: { width: 300, height: 100 },
-                }, (text) => {
-                    qr.stop();
-                    setIsScanning(false);
-                    onDetected(text);
-                });
+                await qr.start(
+                    { facingMode: "environment" }
+                    , {
+                        fps: 10,
+                        qrbox: (viewfinderWidth, viewfinderHeight) => {
+                            const width = viewfinderWidth * 0.9;
+                            const height = viewfinderHeight * 0.3;
+                            return { width, height };
+                        },
+                    }, (text) => {
+                        qr.stop();
+                        setIsScanning(false);
+                        onDetected(text);
+                    });
             }
         } catch (err) {
             console.error(err);
