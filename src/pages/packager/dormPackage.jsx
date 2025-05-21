@@ -14,54 +14,145 @@ const DormPackage = () => {
   const [showModal, setShowModal] = useState(false);
 
   const [search, setSearch] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+
+  const [totalCount, setTotalCount] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 25;
 
   const navigate = useNavigate();
 
-  const fetchPackages = async () => {
+  const fetchPackages = async (isLoadMore = false) => {
     try {
-      const res = await api.post('/package/getByDormAndStatus', {
-        dormID: id,
-        status: selectedStatus
-      });
-      setPackages(res.data);
+      const [packageRes, countRes] = await Promise.all([
+        api.post('/package/getByDormAndStatus', {
+          dormID: id,
+          status: selectedStatus,
+          search,
+          limit,
+          offset: isLoadMore ? offset : 0,
+          date: selectedDate || null
+        }),
+        api.post('/package/getByDormAndStatus/count', {
+          dormID: id,
+          status: selectedStatus,
+          search,
+          date: selectedDate || null
+        })
+      ]);
+
+      if (isLoadMore) {
+        setPackages(prev => [...prev, ...packageRes.data]);
+      } else {
+        setPackages(packageRes.data);
+      }
+
+      setTotalCount(countRes.data.total);
+
+      if (packageRes.data.length < limit) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+
+      if (!isLoadMore) {
+        setOffset(limit);
+      } else {
+        setOffset(prev => prev + limit);
+      }
+
     } catch (err) {
       console.error('Failed to fetch packages:', err);
     }
   };
 
+
+
   useEffect(() => {
-    fetchPackages();
-  }, [id, selectedStatus]);
+    setOffset(0);
+    fetchPackages(false);
+  }, [id, selectedStatus, search, selectedDate]);
+
+  function formatThaiDateTime(isoString) {
+    const date = new Date(isoString);
+    const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+    const day = thaiDate.getDate();
+    const month = thaiDate.getMonth();
+    const year = thaiDate.getFullYear() + 543;
+    const hours = thaiDate.getHours().toString().padStart(2, '0');
+    const minutes = thaiDate.getMinutes().toString().padStart(2, '0');
+
+    const thaiMonths = [
+      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+    ];
+
+    return `${day} ${thaiMonths[month]} ${year} ${hours}:${minutes} น.`;
+  }
+
 
   return (
     <div>
       <div className="flex-between-menu">
         <h2>รายการพัสดุทั้งหมด</h2>
-        <a onClick={() => navigate(`/dorm/${id}/deliver`)}>นำจ่ายพัสดุ</a>
+        {/* <a onClick={() => navigate(`/dorm/${id}/deliver`)}>นำจ่ายพัสดุ</a> */}
       </div>
 
-      <input
-      type="text"
-      className="myinput"
-      placeholder="🔍 ค้นด้วยเลขพัสดุ / เลขห้อง / ชื่อผู้รับ"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
 
-      <div className="line-wrap" style={{marginTop:"15px"}}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex:'1' }}>
+          <label style={{ marginBottom: '4px' }}>
+            ค้นหา
+          </label>
+          <input
+            type="text"
+            className="myinput"
+            placeholder="🔍 ค้นด้วยเลขพัสดุ / เลขห้อง / ชื่อผู้รับ"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <label style={{ marginBottom: '4px' }}>
+            {selectedStatus === 'delivered' ? 'วันที่รับพัสดุ' : 'วันที่เข้าสู่ระบบ'}
+          </label>
+          <input
+            type="date"
+            className="myinput"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ maxWidth: "180px" }}
+          />
+        </div>
+      </div>
+
+
+      <div className="line-wrap" style={{ marginTop: "15px" }}>
         <div
           className={`line-item ${selectedStatus === 'wait_for_deliver' ? 'selected' : ''}`}
-          onClick={() => setSelectedStatus('wait_for_deliver')}
+          onClick={() => {
+            setSelectedStatus('wait_for_deliver')
+            setSelectedDate('')
+          }}
         >
           รอการนำจ่าย
         </div>
         <div
           className={`line-item ${selectedStatus === 'delivered' ? 'selected' : ''}`}
-          onClick={() => setSelectedStatus('delivered')}
+          onClick={() => {
+            setSelectedStatus('delivered')
+            setSelectedDate('')
+          }}
         >
           นำจ่ายแล้ว
         </div>
       </div>
+
+      <p style={{ marginTop: "20px" }}>
+        แสดงรายการพัสดุ {packages.length} รายการ จากทั้งหมด {totalCount} รายการ
+      </p>
 
       <div className="package-container">
         {packages.map(pkg => (
@@ -71,9 +162,13 @@ const DormPackage = () => {
             </div>
             <div className="package-info">
               <h2>{pkg.recipientRoomNo} | {pkg.recipientName}</h2>
-              <h3 style={{color:"#191970"}}><FontAwesomeIcon icon={faBarcode}/> {pkg.trackingNo}</h3>
-              <p>🗓️ เข้าสู่ระบบเมื่อ: {new Date(pkg.registerTime).toLocaleString()}</p>
-              <p>👤 เพิ่มโดย: {pkg.registerBy}</p>
+              <h3 style={{ color: "#191970" }}><FontAwesomeIcon icon={faBarcode} /> {pkg.trackingNo}</h3>
+              <p>
+                🗓️ {pkg.status === 'delivered' ? 'นำจ่ายเมื่อ' : 'เข้าสู่ระบบเมื่อ'}: {formatThaiDateTime(pkg.status === 'delivered' ? pkg.deliverTime : pkg.registerTime)}
+              </p>
+              <p>
+                👤 {pkg.status === 'delivered' ? 'ผู้รับ' : 'เพิ่มโดย'}: {pkg.status === 'delivered' ? pkg.receiver : pkg.registerBy}
+              </p>
             </div>
             {pkg.status == 'wait_for_deliver' &&
               <div className="package-action">
@@ -88,11 +183,19 @@ const DormPackage = () => {
           </div>
         ))}
       </div>
+
+      {hasMore && (
+        <div style={{ textAlign: 'center', marginTop: '0', marginBottom: '50px' }}>
+          <button className="mybtn btn-full-width btn-white" onClick={() => fetchPackages(true)}>
+            ดูเพิ่มเติม
+          </button>
+        </div>
+      )}
       {showModal &&
-        <PackageEditModal id={selectedPackage} onClose={() => {
+        <PackageEditModal id={selectedPackage} onClose={(isUpdate) => {
           setShowModal(false)
           setSelectedPackage('');
-          fetchPackages();
+          fetchPackages(false);
         }} />
       }
     </div>

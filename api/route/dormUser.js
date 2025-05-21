@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const database = require('../database');
+const authenticateToken = require('../middlewares/authenticateToken');
 
 function generateUserCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -64,8 +65,8 @@ router.post('/getByDormAndRole', (req, res) => {
 });
 
 // get with dormName , used in dashboard
-router.post('/getByUserID', (req, res) => {
-  const { userID } = req.body;
+router.post('/getByUserID', authenticateToken, (req, res) => {
+  const userID = req.user.id;
   const query = `
     SELECT ud.*, dorm.name AS dormName, dorm.pathToPicture 
     FROM user_dorm ud

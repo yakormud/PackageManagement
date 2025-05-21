@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faExclamation, faVideoSlash } from '@fortawesome/free-solid-svg-icons';
+import Swal from 'sweetalert2';
 
 const PackageScanner = ({ onClose, onDetected }) => {
     const scannerRef = useRef(null);
@@ -41,7 +42,15 @@ const PackageScanner = ({ onClose, onDetected }) => {
             setIsScanning(false)
             setCameraErr(err)
             console.error(err);
-            alert("ไม่สามารถเรียกใช้งานกล้องได้")
+            Swal.fire({
+                icon: 'error',
+                title: 'ไม่สามารถเรียกใช้งานกล้องได้',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
         }
     };
 
@@ -88,7 +97,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
                 </div>
             )}
             <div id="qr-reader" className="qr-reader" />
-            {isPicScan && <p style={{marginTop:"50px", marginBottom:"50px"}}>ไม่สามารถอ่านค่าจากรูปดังกล่าวได้</p>}
+            {isPicScan && <p style={{ marginTop: "50px", marginBottom: "50px" }}>ไม่สามารถอ่านค่าจากรูปดังกล่าวได้</p>}
 
             <div className="scan-button-row">
 
@@ -102,11 +111,11 @@ const PackageScanner = ({ onClose, onDetected }) => {
                         </label>
                     </>
                 ) : isPicScan ? (
-                    <>  
+                    <>
                     </>
                 ) : (
                     <>
-                    <label onClick={() => startCamera()} className='mybtn btn-peel btn-white'>📷 เรียกใช้กล้อง</label>
+                        <label onClick={() => startCamera()} className='mybtn btn-peel btn-white'>📷 เรียกใช้กล้อง</label>
                         <label className="mybtn btn-peel btn-white">
                             📁 แสกนจากรูปภาพ
                             <input type="file" accept="image/*" onChange={scanImageFile} hidden />

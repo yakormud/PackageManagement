@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import api from '../../utils/api';
-import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
+import Swal from 'sweetalert2';
 
 const AddPackageForm = () => {
   const location = useLocation();
@@ -42,6 +43,9 @@ const AddPackageForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!recipientName || !recipientRoomNo || !recipientID) {
+      console.log(recipientName)
+      console.log(recipientID)
+      console.log(recipientRoomNo)
       alert('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
@@ -62,11 +66,23 @@ const AddPackageForm = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      alert('เพิ่มพัสดุสำเร็จ');
-      navigate(-1);
+      const result = await Swal.fire({
+        title: 'เพิ่มพัสดุสำเร็จ 🎉',
+        text: 'คุณต้องการเพิ่มพัสดุต่อหรือไม่?',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'เพิ่มต่อ',
+        cancelButtonText: 'กลับหน้าข้อมูลหอพัก',
+      });
+
+      if (result.isConfirmed) {
+        navigate(-1);
+      } else {
+        navigate(`/dorm/${dormID}/info`);
+      }
     } catch (err) {
       console.error('Error adding package:', err);
-      alert('เกิดข้อผิดพลาดในการเพิ่มพัสดุ');
+      Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเพิ่มพัสดุได้', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +101,8 @@ const AddPackageForm = () => {
 
       <div style={{ marginBottom: 20 }}>
         <label>ค้นหาผู้รับ:</label>
-        <Select
+
+        <CreatableSelect
           options={userOptions.map(user => ({
             label: user.label,
             value: user.fullName,
@@ -93,80 +110,100 @@ const AddPackageForm = () => {
             userDormID: user.userDormID
           }))}
           onChange={(selected) => {
-            setRecipientName(selected.value);
-            setRecipientRoomNo(selected.roomNo);
-            setRecipientID(selected.userDormID);
+            if (!selected) {
+              setRecipientID(null);
+              setRecipientName('');
+              setRecipientRoomNo('');
+              return;
+            }
+
+
+            //ตอนสร้างใหม่
+            if (selected.__isNew__) {
+              setRecipientName(selected.value);
+              setRecipientID(-99); 
+              setRecipientRoomNo('ไม่ระบุ'); 
+            } else {
+              setRecipientName(selected.value);
+              setRecipientRoomNo(selected.roomNo);
+              setRecipientID(selected.userDormID);
+            }
           }}
-          placeholder="ค้นหาชื่อผู้รับ"
+          placeholder="ค้นหาหรือเพิ่มชื่อผู้รับ"
+          isClearable
           isSearchable
+          formatCreateLabel={(input) => `เพิ่มชื่อใหม่: "${input}"`}
         />
       </div>
 
 
-      {recipientID && (
+      {recipientID !== null && (
         <form onSubmit={handleSubmit}>
-          {/* ชื่อผู้รับ */}
-          <div style={{ marginBottom: 10 }}>
-            <label>ชื่อผู้รับ:</label>
-            <input
-              type="text"
-              value={recipientName}
-              onChange={(e) => {
-                setRecipientName(e.target.value)
-                setRecipientID(0)
-              }}
-              required
-              style={{ width: '100%', padding: 8 }}
-            />
-          </div>
+          {/* recipientID = 0 คือไม่มีในระบบ */}
+          {recipientID === 0 || recipientID === -99 && (
+            <>
+              <div style={{ marginBottom: 10 }}>
+                <label>ชื่อผู้รับ:</label>
+                <input
+                  type="text"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: 8 }}
+                />
+              </div>
 
-          {/* หมายเลขห้อง */}
-          <div style={{ marginBottom: 10 }}>
-            <label>หมายเลขห้อง:</label>
-            <select
-              value={recipientRoomNo}
-              onChange={(e) => setRecipientRoomNo(e.target.value)}
-              required
-              style={{ width: '100%', padding: 8 }}
-            >
-              <option value="">-- เลือกห้อง --</option>
-              {roomOptions.map(room => (
-                <option key={room.id} value={room.roomNo}>
-                  {room.roomNo}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div style={{ marginBottom: 10 }}>
+                <label>หมายเลขห้อง:</label>
+                <select
+                  value={recipientRoomNo}
+                  onChange={(e) => setRecipientRoomNo(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: 8 }}
+                >
+                  <option value="">-- เลือกห้อง --</option>
+                  <option value="ไม่ระบุ">ไม่ระบุ</option>
+                  {roomOptions.map(room => (
+                    <option key={room.id} value={room.roomNo}>{room.roomNo}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
-          {/* รูปภาพพัสดุ */}
+          {/* มี recipientID = มีในระบบ */}
+          {recipientID !== 0 && recipientID !== -99 && (
+            <>
+              <div style={{ marginBottom: 10 }}>
+                <label>ชื่อผู้รับ:</label>
+                <input type="text" value={recipientName} readOnly style={{ width: '100%', padding: 8 }} />
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label>หมายเลขห้อง:</label>
+                <input type="text" value={recipientRoomNo} readOnly style={{ width: '100%', padding: 8 }} />
+              </div>
+            </>
+          )}
+
+          {/* อัปโหลดรูปภาพ */}
           <div style={{ marginBottom: 10 }}>
             <label>รูปภาพพัสดุ:</label>
-            <label style={{ cursor: 'pointer', marginTop: 5 }}>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => {
-                  if (e.target.files[0]) {
-                    setImageFile(e.target.files[0]);
-                  }
-                }}
-              />
-            </label>
-
-            {/* Preview */}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => {
+                if (e.target.files[0]) {
+                  setImageFile(e.target.files[0]);
+                }
+              }}
+            />
             {imageFile && (
               <div style={{ marginTop: 10 }}>
-                <p style={{ fontSize: 14 }}>รูปที่เลือก:</p>
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="preview"
-                  style={{ width: '100%', maxWidth: 300, borderRadius: 8 }}
-                />
+                <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: '100%', maxWidth: 300, borderRadius: 8 }} />
               </div>
             )}
           </div>
-
 
           <button type="submit" className="mybtn" disabled={submitting}>
             {submitting ? 'กำลังส่ง...' : 'เพิ่มพัสดุ'}

@@ -7,11 +7,9 @@ import UserQRCode from '../packager/userQRCode';
 import SendEmailButton from './SendEmailButton';
 import packagePic from '../../assets/package-large.png'
 import hotelPic from '../../../image/dorm1.png'
-import hotelPic2 from '../../../image/dorm2.png'
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const userID = 1; //MOCK
 
   const [packages, setPackages] = useState([]);
   const [dorms, setDorms] = useState([]);
@@ -27,7 +25,7 @@ const Dashboard = () => {
 
   const fetchPackages = async () => {
     try {
-      const res = await api.post('/package/getByUserID', { userID });
+      const res = await api.post('/package/getByUserID');
       setPackages(res.data);
     } catch (err) {
       console.error('Failed to fetch packages:', err);
@@ -36,7 +34,7 @@ const Dashboard = () => {
 
   const fetchDorms = async () => {
     try {
-      const res = await api.post('/dorm-user/getByUserID', { userID });
+      const res = await api.post('/dorm-user/getByUserID');
       setDorms(res.data);
       console.log(res.data)
     } catch (err) {

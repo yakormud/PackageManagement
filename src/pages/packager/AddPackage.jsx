@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBarcode } from '@fortawesome/free-solid-svg-icons';
 
 const AddPackage = () => {
-  const [trackingNo, setTrackingNo] = useState('5673438TH');
+  const [trackingNo, setTrackingNo] = useState('');
   const [packageData, setPackageData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

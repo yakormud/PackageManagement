@@ -4,6 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const database = require('../database');
 const authenticateToken = require('../middlewares/authenticateToken');
+const fs = require('fs');
+
 
 // ตั้งค่า storage ของ multer เพื่อบันทึกไฟล์ที่อัปโหลด
 const storage = multer.diskStorage({
@@ -11,7 +13,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + generateInviteCode());
+        cb(null, Date.now() + generateInviteCode() + path.extname(file.originalname));
     }
 });
 
@@ -138,22 +140,64 @@ router.get('/info-by-code/:code', (req, res) => {
 });
 
 
-router.put('/update/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, address, ownerName, phoneNo } = req.body;
+// router.put('/update/:id', (req, res) => {
+//     const { id } = req.params;
+//     const { name, address, ownerName, phoneNo } = req.body;
 
-    const query = `
+//     const query = `
+//     UPDATE dormitory
+//     SET name = ?, address = ?, ownerName = ?, phoneNo = ?
+//     WHERE id = ?
+//   `;
+
+//     database.query(query, [name, address, ownerName, phoneNo, id], (err, result) => {
+//         if (err) return res.status(500).json({ message: 'Database error' });
+
+//         res.json({ message: 'Dorm updated successfully' });
+//     });
+// });
+
+router.put('/update/:id', upload.single('picture'), (req, res) => {
+  const { id } = req.params;
+  const { name, address, ownerName, phoneNo, oldPath, deleteImage } = req.body;
+
+  let newPath = oldPath;
+
+  //มีไฟล์ = อัปรูปใหม่
+  if (req.file) {
+    console.log("HAVE NEW PIC")
+    newPath = `/uploads/${req.file.filename}`;
+    // ลบรูปเก่า
+    if (oldPath) {
+      const fullPath = path.join(__dirname, '..', oldPath);
+      fs.unlink(fullPath, (err) => {
+        if (err) console.error('Error deleting old image:', err);
+      });
+      console.log("DELETE OLD PATH , UPDATE NEW PATH")
+    }
+  } else if (deleteImage === 'true') {
+    console.log("WANT TO DEL PIC")
+    if (oldPath) {
+      const fullPath = path.join(__dirname, '..', oldPath);
+      fs.unlink(fullPath, (err) => {
+        if (err) console.error('Error deleting image:', err);
+      });
+      console.log("DEL PIC")
+    }
+    newPath = ''; // ล้างรูป
+  }
+
+  const query = `
     UPDATE dormitory
-    SET name = ?, address = ?, ownerName = ?, phoneNo = ?
+    SET name = ?, address = ?, ownerName = ?, phoneNo = ?, pathToPicture = ?
     WHERE id = ?
   `;
-
-    database.query(query, [name, address, ownerName, phoneNo, id], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Database error' });
-
-        res.json({ message: 'Dorm updated successfully' });
-    });
+  database.query(query, [name, address, ownerName, phoneNo, newPath, id], (err) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    res.json({ message: 'Dorm updated successfully' });
+  });
 });
+
 
 
 

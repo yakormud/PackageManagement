@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CreatableSelect from 'react-select/creatable';
 import api, { BASE_URL } from '../../utils/api';
 import { useParams } from 'react-router-dom';
 
@@ -13,6 +14,8 @@ const PackageEditModal = ({ id, onClose }) => {
     pathToPicture: '',
   });
 
+  const [newImage, setNewImage] = useState(null);
+  const [deleteImage, setDeleteImage] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [people, setPeople] = useState([]);
 
@@ -35,6 +38,7 @@ const PackageEditModal = ({ id, onClose }) => {
         trackingNo: data.trackingNo,
         pathToPicture: data.pathToPicture,
       });
+      setDeleteImage(false);
     } catch (err) {
       console.error('Failed to fetch package:', err);
     }
@@ -42,7 +46,7 @@ const PackageEditModal = ({ id, onClose }) => {
 
   const fetchRooms = async () => {
     try {
-      const res = await api.get(`/dorm-room/getAllRoom/${dormID}`);
+      const res = await api.get(`/dropdown/rooms/${dormID}`);
       setRooms(res.data);
     } catch (err) {
       console.error('Failed to fetch rooms:', err);
@@ -50,38 +54,47 @@ const PackageEditModal = ({ id, onClose }) => {
   };
 
   const fetchPeople = async () => {
-    try {
-      const res = await api.post('/dorm-user/getAllUser', { dormID });
-      setPeople(res.data);
-    } catch (err) {
-      console.error('Failed to fetch people:', err);
-    }
-  };
+  try {
+    const res = await api.get(`/dropdown/users/${dormID}`); 
+    setPeople(res.data);
+  } catch (err) {
+    console.error('Failed to fetch people:', err);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === 'recipientName') {
-      const selectedPerson = people.find(p => p.fullName === value);
-      setFormData(prev => ({
-        ...prev,
-        recipientName: value,
-        recipientID: selectedPerson ? selectedPerson.userID : '',
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  useEffect(() => {
-    console.log(formData)
-  }, [formData])
+  
+  const handleImageChange = (e) => {
+    setNewImage(e.target.files[0]);
+    setDeleteImage(false); // ถ้าเลือกใหม่ ถือว่าไม่ลบ
+  };
+
+  const handleDeleteImage = () => {
+    setNewImage(null);
+    setDeleteImage(true);
+  };
 
   const handleSubmit = async () => {
+    const form = new FormData();
+    form.append('id', id);
+    form.append('recipientID', formData.recipientID);
+    form.append('recipientName', formData.recipientName);
+    form.append('recipientRoomNo', formData.recipientRoomNo);
+    form.append('trackingNo', formData.trackingNo);
+    form.append('oldPath', formData.pathToPicture);
+    form.append('deleteImage', deleteImage); 
+    if (newImage) {
+      form.append('image', newImage);
+    }
+    console.log(form)
+
     try {
-      await api.post('/package/update', {
-        ...formData,
-        id,
+      await api.post('/package/update', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       onClose();
     } catch (err) {
@@ -95,19 +108,49 @@ const PackageEditModal = ({ id, onClose }) => {
         <h3>แก้ไขรายละเอียดพัสดุ</h3>
 
         <label htmlFor="recipientName">ชื่อผู้รับ</label>
-        <select
-          id='recipientName'
-          name="recipientName"
-          value={formData.recipientName}
-          onChange={handleChange}
-        >
-          <option value="">เลือกชื่อผู้รับ</option>
-          {people.map(p => (
-            <option key={p.userID} value={p.fullName}>
-              {p.fullName}
-            </option>
-          ))}
-        </select>
+        <CreatableSelect
+          id="recipientName"
+          isClearable
+          isSearchable
+          formatCreateLabel={(input) => `เพิ่มชื่อใหม่: "${input}"`}
+          options={people.map(user => ({
+            label: user.label,
+            value: user.fullName,
+            roomNo: user.roomNo || '',
+            userDormID: user.userDormID
+          }))}
+          value={
+            formData.recipientName
+              ? { label: formData.recipientName, value: formData.recipientName }
+              : null
+          }
+          onChange={(selected) => {
+            if (!selected) {
+              setFormData(prev => ({
+                ...prev,
+                recipientName: '',
+                recipientID: -99,
+                recipientRoomNo: '',
+              }));
+            } else if (selected.__isNew__) {
+              setFormData(prev => ({
+                ...prev,
+                recipientName: selected.value,
+                recipientID: -99,
+                recipientRoomNo: 'ไม่ระบุ', 
+              }));
+            } else {
+              setFormData(prev => ({
+                ...prev,
+                recipientName: selected.value,
+                recipientID: selected.userDormID,
+                recipientRoomNo: selected.roomNo,
+              }));
+              console.log(selected.userDormID)
+            }
+          }}
+          placeholder="ค้นหาหรือเพิ่มชื่อผู้รับ"
+        />
 
         <label htmlFor="roomNo">หมายเลขห้อง</label>
         <select
@@ -117,6 +160,7 @@ const PackageEditModal = ({ id, onClose }) => {
           onChange={handleChange}
         >
           <option value="">เลือกห้อง</option>
+          <option value="ไม่ระบุ">ไม่ระบุ</option>
           {rooms.map(r => (
             <option key={r.id} value={r.roomNo}>{r.roomNo}</option>
           ))}
@@ -131,13 +175,30 @@ const PackageEditModal = ({ id, onClose }) => {
           onChange={handleChange}
           placeholder="Tracking No."
         />
-        <div style={{ marginTop: '10px' }}>
+
+        <label>รูปภาพ</label>
+        {formData.pathToPicture && !deleteImage && !newImage && (
+          <div className='edit-image'>
+            <img
+              src={`${BASE_URL}${formData.pathToPicture}`}
+              alt="package"
+              style={{ width: '150px', borderRadius: '8px' }}
+            />
+            <button type="button" className="delete-pic" onClick={handleDeleteImage}>
+              ลบรูป
+            </button>
+          </div>
+        )}
+
+        {newImage && (
           <img
-            src={formData.pathToPicture ? `${BASE_URL}${formData.pathToPicture}` : `${BASE_URL}/packages/default.png`}
-            alt="พัสดุ"
-            style={{ width: '150px', borderRadius: '8px' }}
+            src={URL.createObjectURL(newImage)}
+            alt="preview"
+            style={{ width: '150px', borderRadius: '8px', marginTop: '10px' }}
           />
-        </div>
+        )}
+
+        <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} />
 
         <div className="modal-actions">
           <button onClick={onClose}>ยกเลิก</button>

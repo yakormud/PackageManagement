@@ -32,6 +32,7 @@ const DormLayout = () => {
         setUserRole(roleRes.data.role);
         console.log("USER ROLE: ", roleRes.data.role )
       } catch (err) {
+        navigate('/dashboard')
         console.error('Failed to determine user role:', err);
       }
     };
