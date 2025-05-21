@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faExclamation, faVideoSlash } from '@fortawesome/free-solid-svg-icons';
 import Swal from 'sweetalert2';
 
-const PackageScanner = ({ onClose, onDetected }) => {
+const PackageScanner = ({ onClose, onDetected, isDeliverMode = false}) => {
     const scannerRef = useRef(null);
     const [manualCode, setManualCode] = useState('');
     const [isScanning, setIsScanning] = useState(false);
@@ -146,6 +146,7 @@ const PackageScanner = ({ onClose, onDetected }) => {
                 />
                 <button className="mybtn" onClick={() => manualCode && onDetected(manualCode)}>ยืนยัน</button>
             </div>
+            {isDeliverMode && <h5 style={{cursor:"pointer"}} onClick={()=> onDetected('-99')}>นำจ่ายพัสดุที่ไม่มีผู้เช่าในระบบ</h5>}
         </div>
     );
 };

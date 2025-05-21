@@ -862,7 +862,7 @@ label {
   margin-top: 20px;
   width: 100%;
   max-width: 320px;
-  margin-bottom: 200px;
+  margin-bottom: 5px;
 }
 
 .manual-input-row input {
@@ -890,6 +890,24 @@ input[type="text"] {
   box-sizing: border-box;
 }
 
+/* DELIVER PACKAGE */
+.deliver-header {
+  width: 100%;
+  text-align: center;
+  h3 {
+    font-size: 1.9rem;
+  }
+  > * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+.package-card.selected {
+  border: 2px solid #007bff;
+  background-color: #f0f8ff;
+  /* box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); */
+}
 
 /* LAPTOP */
 @media only screen and (max-width: 1440px) {}

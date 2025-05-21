@@ -81,8 +81,6 @@ const Dashboard = () => {
           setSelectedPackage('')
         }} />
       )}
-
-      <SendEmailButton/>
     </div>
   );
 };

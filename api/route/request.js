@@ -4,38 +4,67 @@ const database = require('../database');
 
 
 router.post('/join', (req, res) => {
-    const { userID, fullName, code } = req.body;
+  const { userID, fullName, code } = req.body;
 
-    if (!userID || !fullName || !code) {
-        return res.status(400).json({ message: 'Missing fields' });
+  if (!userID || !fullName || !code) {
+    return res.status(400).json({ message: 'Missing fields' });
+  }
+
+  const findDormQuery = 'SELECT id FROM dormitory WHERE inviteCode = ? LIMIT 1';
+  database.query(findDormQuery, [code], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Database error' });
     }
 
-    const findDormQuery = 'SELECT id FROM dormitory WHERE inviteCode = ? LIMIT 1';
-    database.query(findDormQuery, [code], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: 'Database error' });
+    if (result.length === 0) {
+      return res.status(404).json({ message: 'Dorm not found' });
+    }
+
+    const dormID = result[0].id;
+
+    // เช็คว่าผู้ใช้อยู่ในหอนี้อยู่แล้วหรือยัง
+    const checkUserDorm = 'SELECT * FROM user_dorm WHERE userID = ? AND dormID = ? LIMIT 1';
+    database.query(checkUserDorm, [userID, dormID], (err2, result2) => {
+      if (err2) {
+        console.error(err2);
+        return res.status(500).json({ message: 'Database error (user_dorm)' });
+      }
+
+      if (result2.length > 0) {
+        return res.status(400).json({ message: 'คุณอยู่ในหอนี้อยู่แล้ว' });
+      }
+
+      // เช็คว่ามี request เดิมหรือยัง
+      const checkRequest = 'SELECT * FROM request WHERE userID = ? AND dormID = ? LIMIT 1';
+      database.query(checkRequest, [userID, dormID], (err3, result3) => {
+        if (err3) {
+          console.error(err3);
+          return res.status(500).json({ message: 'Database error (request)' });
         }
 
-        if (result.length === 0) {
-            return res.status(404).json({ message: 'Dorm not found' });
+        if (result3.length > 0) {
+          return res.status(400).json({ message: 'คุณได้ส่งคำขอไปแล้ว' });
         }
 
-        const dormID = result[0].id;
+        // ยังไม่มี request และยังไม่ได้อยู่ในหอ => แทรกคำขอได้
         const insertQuery = `
-            INSERT INTO request (userID, fullName, date, status, dormID)
-            VALUES (?, ?, NOW(), 'not accept', ?)`;
+          INSERT INTO request (userID, fullName, date, status, dormID)
+          VALUES (?, ?, NOW(), 'not accept', ?)`;
 
-        database.query(insertQuery, [userID, fullName, dormID], (err2, result2) => {
-            if (err2) {
-                console.error(err2);
-                return res.status(500).json({ message: 'Failed to save request' });
-            }
+        database.query(insertQuery, [userID, fullName, dormID], (err4, result4) => {
+          if (err4) {
+            console.error(err4);
+            return res.status(500).json({ message: 'Failed to save request' });
+          }
 
-            res.json({ message: 'Request submitted' });
+          res.json({ message: 'ส่งคำขอเรียบร้อยแล้ว' });
         });
+      });
     });
+  });
 });
+
 
 router.get('/getAllRequestInDorm/:dormId', (req, res) => {
     const dormId = req.params.dormId;

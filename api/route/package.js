@@ -380,6 +380,112 @@ router.post('/checkIfExist', (req, res) => {
 });
 
 
+//give package
+//fetch ไปแสดง
+router.post('/fetchToDeliver', authenticateToken, (req, res) => {
+  const { recipientID, dormID } = req.body;
+
+  let query = ''
+
+  query = `
+    SELECT * FROM package
+    WHERE recipientID = ? AND dormID = ? AND status = 'wait_for_deliver'
+    ORDER BY registerTime DESC
+  `;
+
+  database.query(query, [recipientID, dormID], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'เกิดข้อผิดพลาด' });
+    }
+    res.json(results);
+    console.log(results)
+  });
+});
+
+//deliver
+router.post('/deliverPackage', authenticateToken, async (req, res) => {
+  const { selectedPackage, receiver, dormID, email } = req.body;
+
+  const userID = req.user.id;
+  const deliverTime = getThaiTimeString();
+
+  if (!Array.isArray(selectedPackage) || selectedPackage.length === 0) {
+    return res.status(400).json({ message: 'ไม่มีพัสดุที่เลือก' });
+  }
+
+  const userRole = await getRole(userID, dormID);
+  if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
+    return res.status(403).json({ message: 'Permission denied' });
+  }
+
+  const deliverBy = userRole.fullName;
+
+  try {
+    const updateQuery = `
+      UPDATE package
+      SET status = 'delivered',
+          deliverBy = ?,
+          deliverTime = ?,
+          receiver = ?
+      WHERE id IN (?)
+    `;
+
+    database.query(updateQuery, [deliverBy, deliverTime, receiver, selectedPackage], async (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'เกิดข้อผิดพลาด' });
+      }
+
+      if(!email || email == "" || receiver  == "ผู้ใช้ที่ไม่อยู่ในระบบ") {
+        console.log("CANT SEND EMAIL")
+        return;
+      }
+
+      // ดึง trackingNo 
+      database.query('SELECT trackingNo FROM package WHERE id IN (?)', [selectedPackage], async (err2, rows) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ' });
+          }
+
+          const trackingList = rows.map(row => row.trackingNo).join('<br>');
+
+          // ดึงชื่อหอพัก
+          database.query('SELECT name FROM dormitory WHERE id = ?', [dormID], (err3, dormRows) => {
+              const dormName = dormRows?.[0]?.name || 'ไม่ทราบชื่อหอพัก';
+
+              const mailOptions = {
+                from: `"Dormitory Admin" <test@gmail.com>`,
+                to: email,
+                subject: 'พัสดุของคุณถูกนำจ่ายแล้ว',
+                html: `
+                  <p>เรียนคุณ <strong>${receiver}</strong>,</p>
+                  <p>พัสดุจำนวน <strong>${selectedPackage.length} ชิ้น</strong> ของคุณได้ถูกนำจ่ายเรียบร้อยแล้วโดยเจ้าหน้าที่ <strong>${deliverBy}</strong></p>
+                  <p><strong>หอพัก:</strong> ${dormName}</p>
+                  <p><strong>รายการหมายเลขพัสดุ:</strong><br>${trackingList}</p>
+                  <p>ขอบคุณครับ</p>
+                `
+              };
+
+              sendEmail(mailOptions);
+              console.log(`📧 Email sent to ${email}`);
+
+              res.json({ message: 'นำจ่ายสำเร็จและส่งอีเมลแล้ว', result: results });
+            }
+          );
+        }
+      );
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดต' });
+  }
+});
+
+
+
+
 
 
 module.exports = router;

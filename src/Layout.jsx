@@ -49,9 +49,9 @@ const Layout = () => {
           <li onClick={closeSidebar}>
             <Link to="/mypackage">📦 พัสดุของฉัน</Link>
           </li>
-          <li onClick={closeSidebar}>
+          {/* <li onClick={closeSidebar}>
             <Link to="/mydorms">🏨 หอพักของฉัน</Link>
-          </li>
+          </li> */}
         </ul>
         <hr></hr>
         {/* <h4>สร้างหรือเข้าร่วมหอพัก</h4> */}

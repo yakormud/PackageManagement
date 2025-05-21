@@ -174,6 +174,43 @@ router.post('/getUserRoleByDorm', (req, res) => {
   });
 });
 
+//check ว่า user คนนั้นอยู่ใน dorm หรือไม่
+router.post('/checkIfUserInDorm', (req, res) => {
+  const { code, dormID } = req.body;
+
+  console.log(code)
+  console.log(dormID)
+
+  if (!code || !dormID) {
+    return res.status(400).json({ message: 'Missing code or dormID' });
+  }
+
+  const query = `
+    SELECT ud.fullName, ud.roomID, dr.roomNo, u.email, u.id
+    FROM user_dorm ud
+    LEFT JOIN dorm_room dr ON dr.id = ud.roomID
+    LEFT JOIN user u ON u.id = ud.userID
+    WHERE ud.code = ? AND ud.dormID = ? AND ud.roomID IS NOT NULL
+  `;
+
+  database.query(query, [code, dormID], (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found in this dorm' });
+    }
+
+    res.json({
+      fullName: results[0].fullName,
+      id: results[0].id, // userID
+      roomID: results[0].roomID,
+      roomNo: results[0].roomNo,
+      email: results[0].email
+    });
+  });
+});
+
+
 
 
 
