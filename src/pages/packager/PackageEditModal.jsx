@@ -20,6 +20,8 @@ const PackageEditModal = ({ id, onClose }) => {
   const [rooms, setRooms] = useState([]);
   const [people, setPeople] = useState([]);
 
+  const [isSubmit, setIsSubmit] = useState(false);
+
   useEffect(() => {
     if (id) {
       fetchPackage();
@@ -80,6 +82,7 @@ const PackageEditModal = ({ id, onClose }) => {
   };
 
   const handleSubmit = async () => {
+    setIsSubmit(true);
     const form = new FormData();
     form.append('id', id);
     form.append('recipientID', formData.recipientID);
@@ -102,6 +105,7 @@ const PackageEditModal = ({ id, onClose }) => {
         title: 'สำเร็จ',
         text: 'อัพเดทข้อมูลเรียบร้อย',
       });
+      setIsSubmit(false);
       onClose();
     } catch (err) {
       console.error('Failed to update package:', err);
@@ -110,6 +114,7 @@ const PackageEditModal = ({ id, onClose }) => {
         title: 'ล้มเหลว',
         text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
       });
+      setIsSubmit(false);
     }
   };
 
@@ -241,11 +246,15 @@ const PackageEditModal = ({ id, onClose }) => {
 
         <input type="file" accept="image/*" onChange={handleImageChange} />
 
-        <div className="modal-actions">
-          <button onClick={onClose} className='mybtn btn-white'>ยกเลิก</button>
-          <button onClick={handleDelete} className='mybtn btn-black'>ลบพัสดุ</button>
-          <button onClick={handleSubmit} className='mybtn'>ยืนยัน</button>
-        </div>
+        { isSubmit ? (
+          <div>กำลังโหลด...</div>
+        ) : (
+          <div className="modal-actions">
+            <button onClick={onClose} className='mybtn btn-white'>ยกเลิก</button>
+            <button onClick={handleDelete} className='mybtn btn-black'>ลบพัสดุ</button>
+            <button onClick={handleSubmit} className='mybtn'>ยืนยัน</button>
+          </div>
+        )}
       </div>
     </div>
   );

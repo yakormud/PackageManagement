@@ -81,21 +81,21 @@ const DormPackage = () => {
 
   function formatThaiDateTime(isoString) {
     const date = new Date(isoString);
-    const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
 
-    const day = thaiDate.getDate();
-    const month = thaiDate.getMonth();
-    const year = thaiDate.getFullYear() + 543;
-    const hours = thaiDate.getHours().toString().padStart(2, '0');
-    const minutes = thaiDate.getMinutes().toString().padStart(2, '0');
+    const options = {
+      timeZone: 'Asia/Bangkok',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    };
 
-    const thaiMonths = [
-      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
-      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
-    ];
-
-    return `${day} ${thaiMonths[month]} ${year} ${hours}:${minutes} น.`;
+    const localeString = date.toLocaleString('th-TH', options);
+    return localeString.replace(/(\d{4})/, (_, year) => (parseInt(year) + 543)) + ' น.';
   }
+
 
 
   return (

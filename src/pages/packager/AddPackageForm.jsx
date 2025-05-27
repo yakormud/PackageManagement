@@ -64,15 +64,12 @@ const AddPackageForm = () => {
       formData.append('trackingNo', trackingNo);
 
       if (imageFile) {
-        alert(imageFile)
         formData.append('image', imageFile);
       }
 
 
       const res = await api.post('/package/add', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       const result = await Swal.fire({
@@ -218,7 +215,6 @@ const AddPackageForm = () => {
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files[0]) {
-                  alert(e.target.files[0])
                   setImageFile(e.target.files[0]);
                 }
               }}
