@@ -63,16 +63,15 @@ const AddPackageForm = () => {
       formData.append('recipientID', recipientID);
       formData.append('trackingNo', trackingNo);
       if (imageFile) {
-        formData.append('image', imageFile);
-      }
-      if (imageFile) {
+        const convertedFile = new File([file], file.name, { type: file.type });
+        formData.append('image', convertedFile);
         await Swal.fire({
           title: 'รูปภาพถูกแนบ',
           html: `
-      <p><strong>Name:</strong> ${imageFile.name}</p>
-      <p><strong>Type:</strong> ${imageFile.type}</p>
-      <p><strong>Size:</strong> ${Math.round(imageFile.size / 1024)} KB</p>
-    `,
+                  <p><strong>Name:</strong> ${convertedFile.name}</p>
+                  <p><strong>Type:</strong> ${convertedFile.type}</p>
+                  <p><strong>Size:</strong> ${Math.round(convertedFile.size / 1024)} KB</p>
+                `,
           icon: 'info'
         });
       }
