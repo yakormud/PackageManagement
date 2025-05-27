@@ -96,10 +96,21 @@ const AddPackageForm = () => {
       }
     } catch (err) {
       console.error('Error adding package:', err);
+
+      let errorMsg = 'เกิดข้อผิดพลาด';
+
+      if (err?.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      } else if (typeof err === 'string') {
+        errorMsg = err;
+      }
+
       await Swal.fire({
         icon: 'error',
         title: 'ล้มเหลว',
-        text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+        text: errorMsg,
       });
     } finally {
       setSubmitting(false);
@@ -222,7 +233,7 @@ const AddPackageForm = () => {
             )}
           </div>
 
-          <button type="submit" className="mybtn btn-full-width" disabled={submitting} style={{paddingTop:"10px", marginBottom:"80px"}}>
+          <button type="submit" className="mybtn btn-full-width" disabled={submitting} style={{ paddingTop: "10px", marginBottom: "80px" }}>
             {submitting ? 'กำลังส่ง...' : 'เพิ่มพัสดุ'}
           </button>
         </form>
