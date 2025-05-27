@@ -64,7 +64,7 @@ const AddPackageForm = () => {
       formData.append('trackingNo', trackingNo);
 
       if (imageFile) {
-        alert("imgFIle",imageFile)
+        alert(imageFile)
       }
 
 
