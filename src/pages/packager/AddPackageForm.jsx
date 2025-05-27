@@ -62,8 +62,9 @@ const AddPackageForm = () => {
       formData.append('recipientRoomNo', recipientRoomNo);
       formData.append('recipientID', recipientID);
       formData.append('trackingNo', trackingNo);
+
       if (imageFile) {
-        const convertedFile = new File([imageFile], imageFile.name || 'photo.jpg', { type: imageFile.type || 'image/jpeg' });
+        const convertedFile = new File([imageFile], 'photo.jpg', { type: 'image/jpeg' });
         formData.append('image', convertedFile);
         await Swal.fire({
           title: 'รูปภาพถูกแนบ',
