@@ -15,7 +15,9 @@ const storage = multer.diskStorage({
     try {
       const uniqueName = Date.now() + generateCode() + path.extname(file.originalname);
       cb(null, uniqueName);
+      console.log(uniqueName);
     } catch (err) {
+      console.error('Error generating filename:', err);
       cb(err);
     }
   },
@@ -90,7 +92,6 @@ router.post('/add', authenticateToken, (req, res) => {
       const pathToPicture = req.file ? `/packages/${req.file.filename}` : '';
       const registerTime = getThaiTimeString();
 
-      // ใช้ promise wrapper สำหรับ database.query
       const queryPromise = (sql, params) => new Promise((resolve, reject) => {
         database.query(sql, params, (err, results) => {
           if (err) return reject(err);
