@@ -12,8 +12,12 @@ const storage = multer.diskStorage({
     cb(null, 'packages');
   },
   filename: function (req, file, cb) {
-    const uniqueName = Date.now() + generateCode() + path.extname(file.originalname);
-    cb(null, uniqueName);
+    try {
+      const uniqueName = Date.now() + generateCode() + path.extname(file.originalname);
+      cb(null, uniqueName);
+    } catch (err) {
+      cb(err);
+    }
   },
 });
 
@@ -57,148 +61,132 @@ function formatThaiDateTime(isoString) {
   return `${day} ${thaiMonths[month]} ${year} ${hours}:${minutes} น.`;
 }
 
-router.post('/add', authenticateToken, upload.single('image'), async (req, res) => {
-  const {
-    recipientRoomNo,
-    recipientName,
-    recipientID,
-    trackingNo,
-    dormID
-  } = req.body;
-
-  const userID = req.user.id;
-  console.log('File:', req.file);
-  console.log('Body:', req.body);
-
-  try {
-    const userRole = await getRole(userID, dormID);
-    if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
-      console.log("PERM DENY")
-      return res.status(403).json({ message: 'Permission denied' });
+router.post('/add', authenticateToken, (req, res) => {
+  upload.single('image')(req, res, async (err) => {
+    if (err) {
+      console.error('Multer upload error:', err);
+      return res.status(400).json({ message: err.message || 'Upload error' });
     }
 
-    const pathToPicture = req.file ? `/packages/${req.file.filename}` : '';
-    const registerTime = getThaiTimeString();
+    const {
+      recipientRoomNo,
+      recipientName,
+      recipientID,
+      trackingNo,
+      dormID
+    } = req.body;
 
-    // Insert package
-    const insertQuery = `
-      INSERT INTO package (
+    const userID = req.user.id;
+    console.log('File:', req.file);
+    console.log('Body:', req.body);
+
+    try {
+      const userRole = await getRole(userID, dormID);
+      if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
+        console.log("PERM DENY");
+        return res.status(403).json({ message: 'Permission denied' });
+      }
+
+      const pathToPicture = req.file ? `/packages/${req.file.filename}` : '';
+      const registerTime = getThaiTimeString();
+
+      // ใช้ promise wrapper สำหรับ database.query
+      const queryPromise = (sql, params) => new Promise((resolve, reject) => {
+        database.query(sql, params, (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        });
+      });
+
+      // Insert package
+      const insertQuery = `
+        INSERT INTO package (
+          recipientName,
+          recipientRoomNo,
+          recipientID,
+          trackingNo,
+          pathToPicture,
+          status,
+          registerBy,
+          registerTime,
+          deliverBy,
+          deliverTime,
+          receiver,
+          dormID
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [
         recipientName,
         recipientRoomNo,
         recipientID,
         trackingNo,
         pathToPicture,
-        status,
-        registerBy,
+        'wait_for_deliver',
+        userRole.fullName,
         registerTime,
-        deliverBy,
-        deliverTime,
-        receiver,
-        dormID
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const values = [
-      recipientName,
-      recipientRoomNo,
-      recipientID,
-      trackingNo,
-      pathToPicture,
-      'wait_for_deliver',
-      userRole.fullName,
-      registerTime,
-      '', null, '', dormID
-    ];
+        '', null, '', dormID
+      ];
 
-    database.query(insertQuery, values, async (err, result) => {
-      if (err) {
-        console.error('Error inserting package:', err);
-        onsole.log("ERROR INSERT: ", err)
-        return res.status(500).json({ message: 'Database error' });
+      await queryPromise(insertQuery, values);
+
+      // ดึงอีเมลผู้รับ
+      const userResults = await queryPromise(`SELECT email FROM user WHERE id = ? LIMIT 1`, [recipientID]);
+      const userRow = userResults[0];
+      if (!userRow?.email) {
+        console.log('ไม่พบอีเมลของผู้รับ');
+        return res.json({ message: 'เพิ่มพัสดุแล้ว (ไม่พบอีเมล)' });
       }
 
-      try {
-        // ดึงอีเมลผู้รับ
-        const [userRow] = await new Promise((resolve, reject) => {
-          database.query(`SELECT email FROM user WHERE id = ? LIMIT 1`, [recipientID], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-          });
-        });
+      // ดึงชื่อหอพัก
+      const dormResults = await queryPromise(`SELECT name FROM dormitory WHERE id = ? LIMIT 1`, [dormID]);
+      const dormRow = dormResults[0];
+      const dormName = dormRow?.name || 'ไม่ทราบชื่อหอพัก';
+      if (!dormRow) console.log("ไม่ทราบหอพัก");
 
-        if (!userRow?.email) {
-          console.log('ไม่พบอีเมลของผู้รับ');
-          return res.json({ message: 'เพิ่มพัสดุแล้ว (ไม่พบอีเมล)' });
-        }
+      // นับพัสดุที่รอรับ
+      const countResults = await queryPromise(`
+        SELECT COUNT(*) AS count
+        FROM package
+        WHERE recipientID = ? AND dormID = ? AND status = 'wait_for_deliver'
+      `, [recipientID, dormID]);
+      const count = countResults[0]?.count || 0;
 
-        // ดึงชื่อหอพัก
-        const [dormRow] = await new Promise((resolve, reject) => {
-          database.query(`SELECT name FROM dormitory WHERE id = ? LIMIT 1`, [dormID], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-          });
-        });
+      const thaiTime = formatThaiDateTime(registerTime);
 
-        const dormName = dormRow?.name || 'ไม่ทราบชื่อหอพัก';
-        console.log("ไม่ทราบหอพัก")
+      // ส่งอีเมล
+      const mailOptions = {
+        from: `"Dormitory Admin" <test@gmail.com>`,
+        to: userRow.email,
+        subject: 'เจ้าหน้าที่ได้เพิ่มรายการพัสดุของคุณ',
+        html: `
+          <p>เรียนคุณ <strong>${recipientName}</strong>,</p>
+          <p>เจ้าหน้าที่ <strong>${userRole.fullName}</strong> ได้เพิ่มรายการพัสดุของคุณลงในหอพัก <strong>${dormName}</strong>:</p>
+          <ul>
+            <li><strong>หมายเลขพัสดุ:</strong> ${trackingNo}</li>
+            <li><strong>ชื่อผู้รับ:</strong> ${recipientName}</li>
+            <li><strong>หมายเลขห้อง:</strong> ${recipientRoomNo}</li>
+            <li><strong>เพิ่มเมื่อ:</strong> ${thaiTime}</li>
+          </ul>
+          <p>ขณะนี้คุณมีพัสดุรอรับทั้งหมด <strong>${count} ชิ้น ในหอพักนี้ </strong></p>
+        `
+      };
 
-        // นับพัสดุที่รอรับ
-        const [countRow] = await new Promise((resolve, reject) => {
-          database.query(`
-            SELECT COUNT(*) AS count
-            FROM package
-            WHERE recipientID = ? AND dormID = ? AND status = 'wait_for_deliver'
-          `, [recipientID, dormID], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-          });
-        });
+      await sendEmail(mailOptions);
+      console.log(`📧 Email sent to ${userRow.email}`);
 
-        const count = countRow?.count || 0;
+      res.json({
+        message: 'Package added and email sent',
+        addedBy: userRole.fullName,
+        role: userRole.role
+      });
 
-        const thaiTime = formatThaiDateTime(registerTime);
-
-        // ส่งอีเมล
-        const mailOptions = {
-          from: `"Dormitory Admin" <test@gmail.com>`,
-          to: userRow.email,
-          subject: 'เจ้าหน้าที่ได้เพิ่มรายการพัสดุของคุณ',
-          html: `
-            <p>เรียนคุณ <strong>${recipientName}</strong>,</p>
-            <p>เจ้าหน้าที่ <strong>${userRole.fullName}</strong> ได้เพิ่มรายการพัสดุของคุณลงในหอพัก <strong>${dormName}</strong>:</p>
-            <ul>
-              <li><strong>หมายเลขพัสดุ:</strong> ${trackingNo}</li>
-              <li><strong>ชื่อผู้รับ:</strong> ${recipientName}</li>
-              <li><strong>หมายเลขห้อง:</strong> ${recipientRoomNo}</li>
-              <li><strong>เพิ่มเมื่อ:</strong> ${thaiTime}</li>
-            </ul>
-            <p>ขณะนี้คุณมีพัสดุรอรับทั้งหมด <strong>${count} ชิ้น ในหอพักนี้ </strong></p>
-          `
-        };
-
-        await sendEmail(mailOptions);
-        console.log(`📧 Email sent to ${userRow.email}`);
-
-        res.json({
-          message: 'Package added and email sent',
-          addedBy: userRole.fullName,
-          role: userRole.role
-        });
-
-      } catch (emailErr) {
-        console.error('Error sending email:', emailErr);
-        console.log("EMAIL ERROR: ",emailErr)
-        res.json({
-          message: 'Package added, but failed to send email',
-          error: emailErr.message
-        });
-      }
-    });
-
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: error.message || 'Internal server error' });
+    }
+  });
 });
+
 
 //FOR manager
 router.post('/getByDormAndStatus', (req, res) => {
