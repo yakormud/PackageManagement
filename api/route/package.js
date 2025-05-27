@@ -12,12 +12,22 @@ const storage = multer.diskStorage({
     cb(null, 'packages');
   },
   filename: function (req, file, cb) {
-    const uniqueName = Date.now() + path.extname(file.originalname);
+    const uniqueName = Date.now() + generateCode() + path.extname(file.originalname);
     cb(null, uniqueName);
   },
 });
 
 const upload = multer({ storage });
+
+//gen code eiei
+function generateCode(length = 6) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
 
 function getThaiTimeString() {
   const thaiTime = new Date().toLocaleString('sv-SE', {
