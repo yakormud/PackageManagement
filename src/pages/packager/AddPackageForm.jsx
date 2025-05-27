@@ -65,6 +65,7 @@ const AddPackageForm = () => {
 
       if (imageFile) {
         alert(imageFile)
+        formData.append('image', imageFile);
       }
 
 
