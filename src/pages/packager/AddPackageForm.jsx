@@ -96,7 +96,9 @@ const AddPackageForm = () => {
 
 
       const res = await api.post('/package/add', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
 
       const result = await Swal.fire({
