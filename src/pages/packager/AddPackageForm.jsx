@@ -82,7 +82,11 @@ const AddPackageForm = () => {
       }
     } catch (err) {
       console.error('Error adding package:', err);
-      Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเพิ่มพัสดุได้', 'error');
+      await Swal.fire({
+        icon: 'error',
+        title: 'ล้มเหลว',
+        text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -121,8 +125,8 @@ const AddPackageForm = () => {
             //ตอนสร้างใหม่
             if (selected.__isNew__) {
               setRecipientName(selected.value);
-              setRecipientID(-99); 
-              setRecipientRoomNo('ไม่ระบุ'); 
+              setRecipientID(-99);
+              setRecipientRoomNo('ไม่ระบุ');
             } else {
               setRecipientName(selected.value);
               setRecipientRoomNo(selected.roomNo);

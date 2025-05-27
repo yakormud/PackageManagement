@@ -10,16 +10,13 @@ const TenantQRCode = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const userID = 2; // mocked userID
-
   useEffect(() => {
     if (!id) return;
 
     const fetchCode = async () => {
       try {
         const res = await api.post('/dorm-user/getUserCode', {
-          userID,
-          id,
+          dormID: id ,
         });
         setCode(res.data.code);
       } catch (err) {

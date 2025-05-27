@@ -67,10 +67,13 @@ router.post('/add', authenticateToken, upload.single('image'), async (req, res) 
   } = req.body;
 
   const userID = req.user.id;
+  console.log('File:', req.file);
+  console.log('Body:', req.body);
 
   try {
     const userRole = await getRole(userID, dormID);
     if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
+      console.log("PERM DENY")
       return res.status(403).json({ message: 'Permission denied' });
     }
 
@@ -109,6 +112,7 @@ router.post('/add', authenticateToken, upload.single('image'), async (req, res) 
     database.query(insertQuery, values, async (err, result) => {
       if (err) {
         console.error('Error inserting package:', err);
+        onsole.log("ERROR INSERT: ", err)
         return res.status(500).json({ message: 'Database error' });
       }
 
@@ -135,6 +139,7 @@ router.post('/add', authenticateToken, upload.single('image'), async (req, res) 
         });
 
         const dormName = dormRow?.name || 'ไม่ทราบชื่อหอพัก';
+        console.log("ไม่ทราบหอพัก")
 
         // นับพัสดุที่รอรับ
         const [countRow] = await new Promise((resolve, reject) => {
@@ -181,6 +186,7 @@ router.post('/add', authenticateToken, upload.single('image'), async (req, res) 
 
       } catch (emailErr) {
         console.error('Error sending email:', emailErr);
+        console.log("EMAIL ERROR: ",emailErr)
         res.json({
           message: 'Package added, but failed to send email',
           error: emailErr.message
