@@ -40,22 +40,6 @@ const AddPackageForm = () => {
     fetchRoomsAndUsers();
   }, [dormID]);
 
-  const convertImageToJpeg = async (blob) => {
-    const bitmap = await createImageBitmap(blob);
-    const canvas = document.createElement("canvas");
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(bitmap, 0, 0);
-    return new Promise((resolve) => {
-      canvas.toBlob((newBlob) => {
-        const file = new File([newBlob], 'photo.jpg', { type: 'image/jpeg' });
-        resolve(file);
-      }, 'image/jpeg');
-    });
-  };
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!recipientName || !recipientRoomNo || !recipientID) {
@@ -80,18 +64,7 @@ const AddPackageForm = () => {
       formData.append('trackingNo', trackingNo);
 
       if (imageFile) {
-        const convertedFile = await convertImageToJpeg(imageFile);
-        formData.append('image', convertedFile);
-
-        await Swal.fire({
-          title: 'รูปภาพถูกแนบ',
-          html: `
-                <p><strong>Name:</strong> ${convertedFile.name}</p>
-                <p><strong>Type:</strong> ${convertedFile.type}</p>
-                <p><strong>Size:</strong> ${Math.round(convertedFile.size / 1024)} KB</p>
-              `,
-          icon: 'info'
-        });
+        alert("imgFIle",imageFile)
       }
 
 
@@ -244,6 +217,7 @@ const AddPackageForm = () => {
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files[0]) {
+                  alert(e.target.files[0])
                   setImageFile(e.target.files[0]);
                 }
               }}
