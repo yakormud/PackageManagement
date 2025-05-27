@@ -7,6 +7,10 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middlewares/authenticateToken');
 const SECRET_KEY = process.env.JWT_SECRET;
 
+// bcrypt
+const bcrypt = require('bcrypt');
+const SALT_ROUNDS = 10;
+
 
 router.get('/users', (req, res) => {
   const query = 'SELECT * FROM user'; 
@@ -24,29 +28,36 @@ router.get('/users', (req, res) => {
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  const query = 'SELECT id,username FROM user WHERE username = ? AND password = ?';
+  const query = 'SELECT id, username, password FROM user WHERE username = ?';
 
-  database.query(query, [username, password], (err, results) => {
+  database.query(query, [username, password], async (err, results) => {
     if (err) {
       console.error('Error during login:', err);
       res.status(500).json({ message: 'Internal server error' });
       return;
     }
 
-    if (results.length > 0) {
-      const user = results[0];
+    if (results.length === 0) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
 
-      //สร้าง TOKEN 
+    const user = results[0];
+
+    try {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid username or password' });
+      }
+
       const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, {
         expiresIn: '60m',
       });
-      res.json({ message: 'Login successful', token, user });
 
-      console.log("token: ", token)
-      console.log("user: ", user)
+      res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username } });
 
-    } else {
-      res.status(401).json({ message: 'Invalid username or password' });
+    } catch (compareErr) {
+      console.error('Error comparing passwords:', compareErr);
+      res.status(500).json({ message: 'Error verifying credentials' });
     }
   });
 });
@@ -60,7 +71,7 @@ router.post('/register', (req, res) => {
   
   const query = 'SELECT * FROM user WHERE username = ? OR email = ?';
 
-  database.query( query, [username, email], (err, results) => {
+  database.query( query, [username, email] , async (err, results) => {
     if(err) {
       console.error('Error during login:', err);
       res.status(500).json({ message: 'Internal server error' });
@@ -71,15 +82,21 @@ router.post('/register', (req, res) => {
       return res.status(400).json({ message: 'Username or email already exists' });
     }
 
-    const insertQuery = 'INSERT INTO user (username, password, email) VALUES (?, ?, ?)';
-    database.query(insertQuery, [username, password, email], (err, result) => {
-      if (err) {
-        console.error('Error inserting user:', err);
-        return res.status(500).json({ message: 'Failed to register user' });
-      }
+    try {
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      const insertQuery = 'INSERT INTO user (username, password, email) VALUES (?, ?, ?)';
+      database.query(insertQuery, [username, hashedPassword, email], (err, result) => {
+        if (err) {
+          console.error('Error inserting user:', err);
+          return res.status(500).json({ message: 'Failed to register user' });
+        }
 
-      res.json({ message: 'User registered successfully' });
-    });
+        res.json({ message: 'User registered successfully' });
+      });
+    } catch (hashErr) {
+      console.error('Error hashing password:', hashErr);
+      res.status(500).json({ message: 'Error hashing password' });
+    }
 
   })
 

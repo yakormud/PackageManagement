@@ -4,31 +4,74 @@ const router = express.Router();
 const database = require('../database');
 const authenticateToken = require('../middlewares/authenticateToken');
 
-function generateUserCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 7; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+//gen code eiei
+function generateCode(length = 6) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
 }
 
-router.post('/addUser', (req, res) => {
+//for user_dorm
+async function generateUniqueUserCode(dormID) {
+    let code;
+    let exists = true;
+
+    while (exists) {
+        code = generateCode(6);
+        if (!dormID) {
+            return code;
+        }
+        const [rows] = await new Promise((resolve, reject) => {
+            database.query('SELECT id FROM user_dorm WHERE code = ? AND dormID = ?', [code, dormID], (err, results) => {
+                if (err) reject(err);
+                else resolve([results]);
+            });
+        });
+
+        if (rows.length === 0) {
+            exists = false;
+        }
+        console.log("CHECK USER CODE EXISTS: ", exists)
+    }
+
+    return code;
+}
+
+router.post('/addUser', async (req, res) => {
   const { fullName, role, roomID, userID, dormID } = req.body;
-  const code = generateUserCode(); // Generate code here
 
-  const query = 'INSERT INTO user_dorm (fullName, role, roomID, userID, dormID, code) VALUES (?, ?, ?, ?, ?, ?)';
-  const values = [fullName, role, roomID, userID, dormID, code];
-
-  database.query(query, values, (err, result) => {
+  //เช็คว่ามีไหม
+  const checkQuery = 'SELECT id FROM user_dorm WHERE userID = ? AND dormID = ?';
+  database.query(checkQuery, [userID, dormID], async (err, results) => {
     if (err) {
-      console.error('Error adding user to dorm:', err);
+      console.error('Error checking user_dorm:', err);
       return res.status(500).json({ message: 'Server error' });
     }
 
-    res.json({ message: 'User added successfully', code });
+    if (results.length > 0) {
+      // มี user 
+      return res.status(400).json({ message: 'มีผู้ใช้งานคนนี้ในหอพักอยู่แล้ว' });
+    }
+
+    const code = await generateUniqueUserCode(dormID);
+
+    const insertQuery = 'INSERT INTO user_dorm (fullName, role, roomID, userID, dormID, code) VALUES (?, ?, ?, ?, ?, ?)';
+    const values = [fullName, role, roomID, userID, dormID, code];
+
+    database.query(insertQuery, values, (err2, result) => {
+      if (err2) {
+        console.error('Error adding user to dorm:', err2);
+        return res.status(500).json({ message: 'Server error' });
+      }
+
+      res.json({ message: 'User added successfully', code });
+    });
   });
 });
+
 
 //get record base on id
 router.post('/getById', (req, res) => {
@@ -49,13 +92,20 @@ router.post('/getById', (req, res) => {
 
 
 router.post('/getByDormAndRole', (req, res) => {
-  const { dormID, role } = req.body;
+  const { dormID, role, search } = req.body;
+  const searchText = `%${search || ''}%`;
 
   const query = `
-    SELECT * FROM user_dorm 
-    WHERE dormID = ? AND role = ?
+    SELECT ud.*, dr.roomNo
+    FROM user_dorm ud
+    LEFT JOIN dorm_room dr ON dr.id = ud.roomID
+    WHERE ud.dormID = ? AND ud.role = ? AND (
+      ud.fullName LIKE ? OR
+      dr.roomNo LIKE ?
+    )
   `;
-  database.query(query, [dormID, role], (err, results) => {
+  
+  database.query(query, [dormID, role, searchText, searchText], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ message: 'Database error' });
@@ -68,10 +118,10 @@ router.post('/getByDormAndRole', (req, res) => {
 router.post('/getByUserID', authenticateToken, (req, res) => {
   const userID = req.user.id;
   const query = `
-    SELECT ud.*, dorm.name AS dormName, dorm.pathToPicture 
+    SELECT ud.*, dorm.name AS dormName, dorm.pathToPicture, dorm.isActive
     FROM user_dorm ud
     LEFT JOIN dormitory dorm ON ud.dormID = dorm.id
-    WHERE ud.userID = ?
+    WHERE ud.userID = ? AND dorm.isActive = 1
   `;
   database.query(query, [userID], (err, results) => {
     if (err) return res.status(500).json({ message: err });
@@ -162,8 +212,10 @@ router.post('/getUserRoleByDorm', (req, res) => {
   console.log("dormID ",dormID)
 
   const query = `
-    SELECT role FROM user_dorm 
-    WHERE userID = ? AND dormID = ?
+    SELECT ud.role , d.isActive
+    FROM user_dorm ud
+    LEFT JOIN dormitory d ON d.id = ud.dormID
+    WHERE userID = ? AND dormID = ? AND d.isActive = 1
   `;
 
   database.query(query, [userID, dormID], (err, results) => {

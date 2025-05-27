@@ -13,31 +13,76 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + generateInviteCode() + path.extname(file.originalname));
+        cb(null, Date.now() + generateCode() + path.extname(file.originalname));
     }
 });
 
 const upload = multer({ storage: storage });
 
-function generateInviteCode() {
+//gen code eiei
+function generateCode(length = 6) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     let code = '';
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < length; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
 }
 
-function generateUserCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
+//for dorm
+async function generateUniqueInviteCode() {
+    let code;
+    let exists = true;
+
+    while (exists) {
+        code = generateCode(10);
+        const [rows] = await new Promise((resolve, reject) => {
+            database.query('SELECT id FROM dormitory WHERE inviteCode = ?', [code], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve([results]);
+                }
+            });
+        });
+
+        if (rows.length === 0) {
+            exists = false;
+        }
+        console.log("CHECK DORM CODE EXISTS: ", exists)
     }
+
     return code;
 }
 
-router.post('/create',authenticateToken, upload.single('picture'), (req, res) => {
+//for user_dorm
+async function generateUniqueUserCode(dormID) {
+    let code;
+    let exists = true;
+
+    while (exists) {
+        code = generateCode(6);
+        if (!dormID) {
+            return code;
+        }
+        const [rows] = await new Promise((resolve, reject) => {
+            database.query('SELECT id FROM user_dorm WHERE code = ? AND dormID = ?', [code, dormID], (err, results) => {
+                if (err) reject(err);
+                else resolve([results]);
+            });
+        });
+
+        if (rows.length === 0) {
+            exists = false;
+        }
+        console.log("CHECK USER CODE EXISTS: ", exists)
+    }
+
+    return code;
+}
+
+
+router.post('/create', authenticateToken, upload.single('picture'), async (req, res) => {
     const { name, address, ownerName, phoneNo } = req.body;
 
 
@@ -53,15 +98,14 @@ router.post('/create',authenticateToken, upload.single('picture'), (req, res) =>
         console.log('not found img')
     }
 
-    const inviteCode = generateInviteCode();
-
+    const inviteCode = await generateUniqueInviteCode();
 
     const insertQuery = `
-    INSERT INTO dormitory (name, address, ownerName, phoneNo, pathToPicture, inviteCode)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO dormitory (name, address, ownerName, phoneNo, pathToPicture, inviteCode, isActive)
+    VALUES (?, ?, ?, ?, ?, ?, true)
   `;
 
-    database.query(insertQuery, [name, address, ownerName, phoneNo, pictureUrl, inviteCode], (err, result) => {
+    database.query(insertQuery, [name, address, ownerName, phoneNo, pictureUrl, inviteCode], async (err, result) => {
         if (err) {
             console.error('Error inserting dorm:', err);
             return res.status(500).json({ message: 'Failed to save dorm' });
@@ -72,7 +116,8 @@ router.post('/create',authenticateToken, upload.single('picture'), (req, res) =>
         INSERT INTO user_dorm (fullName, role, roomID, userID, dormID, code)
         VALUES (?, ?, ?, ?, ?, ?)`;
 
-        const mockData = [ownerName, 'owner', 0, req.user.id, dormId, generateUserCode()];
+        const userCode = await generateUniqueUserCode();
+        const mockData = [ownerName, 'owner', 0, req.user.id, dormId, userCode];
 
         database.query(insertUserDormQuery, mockData, (err2, result2) => {
             if (err2) {
@@ -90,7 +135,7 @@ router.post('/create',authenticateToken, upload.single('picture'), (req, res) =>
     );
 });
 
-router.get('/info/:id', authenticateToken , (req, res) => {
+router.get('/info/:id', authenticateToken, (req, res) => {
     const dormId = req.params.id;
     console.log(dormId)
 
@@ -158,43 +203,58 @@ router.get('/info-by-code/:code', (req, res) => {
 // });
 
 router.put('/update/:id', upload.single('picture'), (req, res) => {
-  const { id } = req.params;
-  const { name, address, ownerName, phoneNo, oldPath, deleteImage } = req.body;
+    const { id } = req.params;
+    const { name, address, ownerName, phoneNo, oldPath, deleteImage } = req.body;
 
-  let newPath = oldPath;
+    let newPath = oldPath;
 
-  //มีไฟล์ = อัปรูปใหม่
-  if (req.file) {
-    console.log("HAVE NEW PIC")
-    newPath = `/uploads/${req.file.filename}`;
-    // ลบรูปเก่า
-    if (oldPath) {
-      const fullPath = path.join(__dirname, '..', oldPath);
-      fs.unlink(fullPath, (err) => {
-        if (err) console.error('Error deleting old image:', err);
-      });
-      console.log("DELETE OLD PATH , UPDATE NEW PATH")
+    //มีไฟล์ = อัปรูปใหม่
+    if (req.file) {
+        console.log("HAVE NEW PIC")
+        newPath = `/uploads/${req.file.filename}`;
+        // ลบรูปเก่า
+        if (oldPath) {
+            const fullPath = path.join(__dirname, '..', oldPath);
+            fs.unlink(fullPath, (err) => {
+                if (err) console.error('Error deleting old image:', err);
+            });
+            console.log("DELETE OLD PATH , UPDATE NEW PATH")
+        }
+    } else if (deleteImage === 'true') {
+        console.log("WANT TO DEL PIC")
+        if (oldPath) {
+            const fullPath = path.join(__dirname, '..', oldPath);
+            fs.unlink(fullPath, (err) => {
+                if (err) console.error('Error deleting image:', err);
+            });
+            console.log("DEL PIC")
+        }
+        newPath = ''; // ล้างรูป
     }
-  } else if (deleteImage === 'true') {
-    console.log("WANT TO DEL PIC")
-    if (oldPath) {
-      const fullPath = path.join(__dirname, '..', oldPath);
-      fs.unlink(fullPath, (err) => {
-        if (err) console.error('Error deleting image:', err);
-      });
-      console.log("DEL PIC")
-    }
-    newPath = ''; // ล้างรูป
-  }
 
-  const query = `
+    const query = `
     UPDATE dormitory
     SET name = ?, address = ?, ownerName = ?, phoneNo = ?, pathToPicture = ?
     WHERE id = ?
   `;
-  database.query(query, [name, address, ownerName, phoneNo, newPath, id], (err) => {
-    if (err) return res.status(500).json({ message: 'Database error' });
-    res.json({ message: 'Dorm updated successfully' });
+    database.query(query, [name, address, ownerName, phoneNo, newPath, id], (err) => {
+        if (err) return res.status(500).json({ message: 'Database error' });
+        res.json({ message: 'Dorm updated successfully' });
+    });
+});
+
+router.put('/deactivate/:id', (req, res) => {
+  const { id } = req.params;
+
+  const query = 'UPDATE dormitory SET isActive = 0 WHERE id = ?';
+
+  database.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deactivating dormitory:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    res.json({ message: 'Dormitory deactivated successfully' });
   });
 });
 

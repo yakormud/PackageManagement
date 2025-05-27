@@ -31,7 +31,7 @@ router.get('/users/:dormID', (req, res) => {
       CONCAT(COALESCE(dr.roomNo, 'ไม่มีห้อง'), ' - ', ud.fullName) AS label
     FROM user_dorm ud
     LEFT JOIN dorm_room dr ON ud.roomID = dr.id
-    WHERE ud.dormID = ?
+    WHERE ud.dormID = ? AND ud.role = 'tenant'
     ORDER BY dr.roomNo ASC
   `;
 

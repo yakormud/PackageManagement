@@ -50,7 +50,7 @@ router.post('/join', (req, res) => {
         // ยังไม่มี request และยังไม่ได้อยู่ในหอ => แทรกคำขอได้
         const insertQuery = `
           INSERT INTO request (userID, fullName, date, status, dormID)
-          VALUES (?, ?, NOW(), 'not accept', ?)`;
+          VALUES (?, ?, NOW(), 'not_accept', ?)`;
 
         database.query(insertQuery, [userID, fullName, dormID], (err4, result4) => {
           if (err4) {

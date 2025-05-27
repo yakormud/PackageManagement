@@ -11,10 +11,10 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
   if (err) {
-    console.error('❌ MySQL connection error:', err);
+    console.error('MySQL connection error:', err);
     return;
   }
-  console.log('✅ Connected to MySQL (Aiven)');
+  console.log('Connected to MySQL (Aiven)');
 });
 
 module.exports = connection;

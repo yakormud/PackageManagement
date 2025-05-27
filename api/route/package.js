@@ -256,14 +256,26 @@ router.post('/getByDormAndStatus/count', (req, res) => {
 
 
 //FOR tenant
-router.post('/getByDormAndStatusAndUserID', (req, res) => {
-  const { dormID, status, userID } = req.body;
+router.post('/getTenantPackage', authenticateToken, (req, res) => {
+  const { dormID, status, search, date } = req.body;
+  const searchText = `%${search || ''}%`;
+  const userID = req.user.id;
 
-  const query = `
+  let query = `
       SELECT * FROM package
-      WHERE dormID = ? AND status = ? AND recipientID = ?
+      WHERE dormID = ? AND status = ? AND recipientID = ? AND trackingNo LIKE ?
+      
     `;
-  database.query(query, [dormID, status, userID], (err, results) => {
+
+  const params = [dormID, status, userID, searchText];
+  const timeField = status === 'delivered' ? 'deliverTime' : 'registerTime';
+
+  if (date) {
+    query += ` AND DATE(${timeField}) = ? ORDER BY ${timeField}`;
+    params.push(date); // 'YYYY-MM-DD'
+  }
+
+  database.query(query, params, (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ message: 'Database error' });
@@ -278,7 +290,7 @@ router.post('/getByUserID', authenticateToken, (req, res) => {
         SELECT package.*, dorm.name AS dormName
         FROM package
         LEFT JOIN dormitory dorm ON package.dormID = dorm.id
-        WHERE recipientID = ?
+        WHERE recipientID = ? AND package.status = 'wait_for_deliver'
         ORDER BY dormName
     `;
   database.query(query, [userID], (err, results) => {
@@ -287,10 +299,54 @@ router.post('/getByUserID', authenticateToken, (req, res) => {
   });
 });
 
+//my package
+router.post('/mypackage', authenticateToken, (req, res) => {
+  const { status, search, dormID, date, limit, offset } = req.body;
+  const searchText = `%${search || ''}%`;
+  const userID = req.user.id;
+
+  let query = `
+        SELECT pkg.*, dorm.name AS dormName
+        FROM package pkg
+        LEFT JOIN dormitory dorm ON pkg.dormID = dorm.id
+        WHERE pkg.recipientID = ? AND pkg.status = ?
+        AND (
+          pkg.trackingNo LIKE ?
+        )
+    `;
+
+  const params = [userID, status, searchText];
+  const timeField = status === 'delivered' ? 'deliverTime' : 'registerTime';
+
+  if (dormID) {
+    query += ` AND pkg.dormID = ?`;
+    params.push(dormID);
+  }
+
+  if (date) {
+    query += ` AND DATE(${timeField}) = ?`;
+    params.push(date); // 'YYYY-MM-DD'
+  }
+
+  query += ` ORDER BY ${timeField}, pkg.id DESC LIMIT ? OFFSET ?`;
+  params.push(parseInt(limit, 10));
+  params.push(parseInt(offset, 10));
+
+  database.query(query, params, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    console.log(results)
+    res.json(results);
+  });
+});
+
+
 router.post('/getByID', (req, res) => {
   const { id } = req.body;
   const query = `
-        SELECT * FROM package WHERE id = ?
+        SELECT p.*, d.name AS dormName
+        FROM package p
+        LEFT JOIN dormitory d ON p.dormID = d.id
+        WHERE p.id = ?
     `;
   database.query(query, [id], (err, results) => {
     if (err) return res.status(500).json({ message: 'Database error' });
@@ -437,44 +493,44 @@ router.post('/deliverPackage', authenticateToken, async (req, res) => {
         return res.status(500).json({ message: 'เกิดข้อผิดพลาด' });
       }
 
-      if(!email || email == "" || receiver  == "ผู้ใช้ที่ไม่อยู่ในระบบ") {
+      if (!email || email == "" || receiver == "ผู้ใช้ที่ไม่อยู่ในระบบ") {
         console.log("CANT SEND EMAIL")
         return;
       }
 
       // ดึง trackingNo 
       database.query('SELECT trackingNo FROM package WHERE id IN (?)', [selectedPackage], async (err2, rows) => {
-          if (err2) {
-            console.error(err2);
-            return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ' });
-          }
+        if (err2) {
+          console.error(err2);
+          return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพัสดุ' });
+        }
 
-          const trackingList = rows.map(row => row.trackingNo).join('<br>');
+        const trackingList = rows.map(row => row.trackingNo).join('<br>');
 
-          // ดึงชื่อหอพัก
-          database.query('SELECT name FROM dormitory WHERE id = ?', [dormID], (err3, dormRows) => {
-              const dormName = dormRows?.[0]?.name || 'ไม่ทราบชื่อหอพัก';
+        // ดึงชื่อหอพัก
+        database.query('SELECT name FROM dormitory WHERE id = ?', [dormID], (err3, dormRows) => {
+          const dormName = dormRows?.[0]?.name || 'ไม่ทราบชื่อหอพัก';
 
-              const mailOptions = {
-                from: `"Dormitory Admin" <test@gmail.com>`,
-                to: email,
-                subject: 'พัสดุของคุณถูกนำจ่ายแล้ว',
-                html: `
+          const mailOptions = {
+            from: `"Dormitory Admin" <test@gmail.com>`,
+            to: email,
+            subject: 'พัสดุของคุณถูกนำจ่ายแล้ว',
+            html: `
                   <p>เรียนคุณ <strong>${receiver}</strong>,</p>
                   <p>พัสดุจำนวน <strong>${selectedPackage.length} ชิ้น</strong> ของคุณได้ถูกนำจ่ายเรียบร้อยแล้วโดยเจ้าหน้าที่ <strong>${deliverBy}</strong></p>
                   <p><strong>หอพัก:</strong> ${dormName}</p>
                   <p><strong>รายการหมายเลขพัสดุ:</strong><br>${trackingList}</p>
                   <p>ขอบคุณครับ</p>
                 `
-              };
+          };
 
-              sendEmail(mailOptions);
-              console.log(`📧 Email sent to ${email}`);
+          sendEmail(mailOptions);
+          console.log(`📧 Email sent to ${email}`);
 
-              res.json({ message: 'นำจ่ายสำเร็จและส่งอีเมลแล้ว', result: results });
-            }
-          );
+          res.json({ message: 'นำจ่ายสำเร็จและส่งอีเมลแล้ว', result: results });
         }
+        );
+      }
       );
     });
   } catch (err) {
@@ -482,6 +538,27 @@ router.post('/deliverPackage', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดต' });
   }
 });
+
+// DELETE package by ID
+router.delete('/delete/:id', (req, res) => {
+  const { id } = req.params;
+
+  const query = 'DELETE FROM package WHERE id = ?';
+
+  database.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting package:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Package not found' });
+    }
+
+    res.json({ message: 'Package deleted successfully' });
+  });
+});
+
 
 
 
