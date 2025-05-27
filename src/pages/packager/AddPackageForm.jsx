@@ -96,6 +96,7 @@ const AddPackageForm = () => {
       }
     } catch (err) {
       console.error('Error adding package:', err);
+      alert(err);
 
       let errorMsg = 'เกิดข้อผิดพลาด';
 
