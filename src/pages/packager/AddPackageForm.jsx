@@ -46,7 +46,11 @@ const AddPackageForm = () => {
       console.log(recipientName)
       console.log(recipientID)
       console.log(recipientRoomNo)
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+      await Swal.fire({
+        icon: 'info',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'กรุณากรอกข้อมูลให้ครบ',
+      });
       return;
     }
 
@@ -60,6 +64,17 @@ const AddPackageForm = () => {
       formData.append('trackingNo', trackingNo);
       if (imageFile) {
         formData.append('image', imageFile);
+      }
+      if (imageFile) {
+        await Swal.fire({
+          title: 'รูปภาพถูกแนบ',
+          html: `
+      <p><strong>Name:</strong> ${imageFile.name}</p>
+      <p><strong>Type:</strong> ${imageFile.type}</p>
+      <p><strong>Size:</strong> ${Math.round(imageFile.size / 1024)} KB</p>
+    `,
+          icon: 'info'
+        });
       }
 
       const res = await api.post('/package/add', formData, {
