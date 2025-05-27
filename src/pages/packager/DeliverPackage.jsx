@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import api, { BASE_URL } from '../../utils/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBarcode } from '@fortawesome/free-solid-svg-icons';
+import defaultPic from '../../assets/noimage.png'
 
 const DeliverPackage = () => {
   const [userCode, setUserCode] = useState('');
@@ -104,9 +105,30 @@ const DeliverPackage = () => {
   };
 
   const handleDeliver = async () => {
+
+    let receiverName = userData.fullName;
+
+    if (userData.id === -99) {
+    const { value: inputName, isConfirmed } = await Swal.fire({
+      title: 'กรอกชื่อผู้รับ',
+      input: 'text',
+      inputLabel: 'ชื่อ-นามสกุล',
+      inputPlaceholder: 'กรอกชื่อผู้รับพัสดุ',
+      showCancelButton: true,
+      confirmButtonText: 'ถัดไป',
+      cancelButtonText: 'ยกเลิก',
+      inputValidator: (value) => {
+        if (!value) return 'กรุณากรอกชื่อ';
+      },
+    });
+
+    if (!isConfirmed) return;
+    receiverName = inputName;
+  } 
+
     const confirm = await Swal.fire({
       title: `ยืนยันการนำจ่าย`,
-      text: `คุณต้องการนำจ่ายพัสดุ ${selectedPackage.length} ชิ้นให้กับ ${userData.fullName} หรือไม่?`,
+      text: `คุณต้องการนำจ่ายพัสดุ ${selectedPackage.length} ชิ้นให้กับ ${receiverName} หรือไม่?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
@@ -122,14 +144,19 @@ const DeliverPackage = () => {
           email: userData.email,
         });
 
-        Swal.fire({
+        await Swal.fire({
           icon: 'success',
           title: 'นำจ่ายพัสดุสำเร็จ',
           text: `พัสดุ ${selectedPackage.length} ชิ้นถูกนำจ่ายเรียบร้อยแล้ว`,
           confirmButtonText: 'ตกลง'
         });
 
-        navigate('info');
+        // navigate(`/dorm/${dormID}/deliver`);
+        setUserCode('');
+        setUserData(null);
+        setPackages([]);
+        setSelectedPackage([]);
+        // window.location.reload();
       } catch (err) {
         console.error(err);
         Swal.fire({
@@ -174,7 +201,7 @@ const DeliverPackage = () => {
 
                   <div className="package-image">
                     <img
-                      src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : `${BASE_URL}/packages/default.png`}
+                      src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : defaultPic}
                       alt="package"
                     />
                   </div>

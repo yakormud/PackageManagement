@@ -22,7 +22,7 @@ const DormQRCode = () => {
   }, [id]);
 
   return (
-    <div>
+    <div className='qr-content'>
       <h2>QR Code ของหอพัก</h2>
       <p>ใช้สำหรับการเข้าร่วมหอพัก</p>
       {inviteCode ? (

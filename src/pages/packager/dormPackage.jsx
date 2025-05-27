@@ -4,6 +4,8 @@ import api, { BASE_URL } from '../../utils/api';
 import PackageEditModal from './PackageEditModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBarcode } from '@fortawesome/free-solid-svg-icons';
+import PackageInfo from './PackageInfo';
+import defaultPic from '../../assets/noimage.png'
 
 const DormPackage = () => {
   const { id } = useParams(); // dormID from URL
@@ -20,6 +22,9 @@ const DormPackage = () => {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 25;
+
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [selectInfoPackage, setSelectInfoPackage] = useState(null);
 
   const navigate = useNavigate();
 
@@ -100,9 +105,9 @@ const DormPackage = () => {
         {/* <a onClick={() => navigate(`/dorm/${id}/deliver`)}>นำจ่ายพัสดุ</a> */}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+      <div className='search-package-container'>
 
-        <div style={{ display: 'flex', flexDirection: 'column', flex:'1' }}>
+        <div className='search-group'>
           <label style={{ marginBottom: '4px' }}>
             ค้นหา
           </label>
@@ -114,16 +119,15 @@ const DormPackage = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }} className='input-group'>
           <label style={{ marginBottom: '4px' }}>
             {selectedStatus === 'delivered' ? 'วันที่รับพัสดุ' : 'วันที่เข้าสู่ระบบ'}
           </label>
           <input
             type="date"
-            className="myinput"
+            className="myinput input-180"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ maxWidth: "180px" }}
           />
         </div>
       </div>
@@ -156,9 +160,12 @@ const DormPackage = () => {
 
       <div className="package-container">
         {packages.map(pkg => (
-          <div className="package-card" key={pkg.id}>
+          <div className="package-card" key={pkg.id} onClick={() => {
+            setShowInfoModal(true);
+            setSelectInfoPackage(pkg.id);
+          }}>
             <div className="package-image">
-              <img src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : `${BASE_URL}/packages/default.png`} alt="package" />
+              <img src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : defaultPic} alt="package" />
             </div>
             <div className="package-info">
               <h2>{pkg.recipientRoomNo} | {pkg.recipientName}</h2>
@@ -172,7 +179,8 @@ const DormPackage = () => {
             </div>
             {pkg.status == 'wait_for_deliver' &&
               <div className="package-action">
-                <button className="go-button" onClick={() => {
+                <button className="go-button" onClick={(e) => {
+                  e.stopPropagation();
                   setShowModal(true)
                   setSelectedPackage(pkg.id)
                 }
@@ -197,6 +205,16 @@ const DormPackage = () => {
           setSelectedPackage('');
           fetchPackages(false);
         }} />
+      }
+
+      {showInfoModal &&
+        <PackageInfo
+          id={selectInfoPackage}
+          onClose={() => {
+            setShowInfoModal(false);
+            setSelectInfoPackage(null);
+          }}
+        />
       }
     </div>
   );

@@ -9,7 +9,7 @@ const QrPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className='scan-backdrop'>
+    <>
       {!userCode ? (
         <PackageScanner
           onDetected={(code) => setUserCode(code)}
@@ -18,7 +18,7 @@ const QrPage = () => {
       ) : (
         <DormJoinForm code={userCode} />
       )}
-    </div>
+    </>
   );
 };
 

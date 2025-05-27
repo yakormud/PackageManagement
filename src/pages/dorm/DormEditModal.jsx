@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import api, { BASE_URL } from '../../utils/api';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
-const DormEditModal = ({ dormData, setIsEditMode, refreshDorm }) => {
+const DormEditModal = ({ dormData, setIsEditMode, refreshDorm, role }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: dormData.name,
     address: dormData.address,
@@ -12,9 +15,9 @@ const DormEditModal = ({ dormData, setIsEditMode, refreshDorm }) => {
     picture: null
   });
 
-  useEffect(()=> {
+  useEffect(() => {
     console.log(formData)
-  },[formData])
+  }, [formData])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,12 +57,50 @@ const DormEditModal = ({ dormData, setIsEditMode, refreshDorm }) => {
       await api.put(`/dorm/update/${dormData.id}`, data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      await Swal.fire({
+        icon: 'success',
+        title: 'สำเร็จ',
+        text: 'อัพเดทข้อมูลเรียบร้อย',
+      });
       await refreshDorm();
       setIsEditMode(false);
     } catch (err) {
       console.error('Failed to update dorm:', err);
+      await Swal.fire({
+        icon: 'error',
+        title: 'ล้มเหลว',
+        text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+      });
     }
   };
+
+  const handleDeleteDorm = async () => {
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'คุณแน่ใจหรือไม่ที่จะลบหอพักนี้',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ใช่, ลบเลย',
+      cancelButtonText: 'ยกเลิก'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.put(`/dorm/deactivate/${dormData.id}`);
+        await Swal.fire('สำเร็จ', 'หอพักถูกลบเรียบร้อย', 'success');
+        navigate('/dashboard')
+      } catch (err) {
+        console.error('Failed to delete room:', err);
+        await Swal.fire({
+          icon: 'error',
+          title: 'ล้มเหลว',
+          text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+        });
+        await refreshDorm();
+        setIsEditMode(false);
+      }
+    }
+  }
 
   return (
     <div className="modal-overlay">
@@ -92,10 +133,11 @@ const DormEditModal = ({ dormData, setIsEditMode, refreshDorm }) => {
             style={{ width: '200px', marginTop: '10px' }}
           />
         )}
-        <input type="file" onChange={handleFileChange} />
+        <input type="file" accept="image/*" onChange={handleFileChange} />
 
         <div className="modal-actions">
           <button className="mybtn btn-white" onClick={() => setIsEditMode(false)}>ยกเลิก</button>
+          {role === 'owner' && <button className="mybtn btn-black" onClick={() => handleDeleteDorm()}>ลบหอพัก</button>}
           <button className="mybtn" onClick={handleSubmit}>ยืนยัน</button>
         </div>
       </div>

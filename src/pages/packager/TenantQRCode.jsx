@@ -10,7 +10,7 @@ const TenantQRCode = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const userID = 1; // mocked userID
+  const userID = 2; // mocked userID
 
   useEffect(() => {
     if (!id) return;
@@ -31,7 +31,7 @@ const TenantQRCode = () => {
   }, [id]);
 
   return (
-    <div className='page-content'>
+    <div className='page-content tenant-page'>
       <h2>QR Code รับพัสดุ</h2>
       <p>ใช้สำหรับแสดงให้เจ้าหน้าที่ยืนยันตัวตน</p>
       <p>สำหรับการเข้ารับพัสดุ</p>
@@ -40,7 +40,7 @@ const TenantQRCode = () => {
       </div>
       <p style={{margin:"10px 0px"}}>รหัส Code: {code || 'ไม่พบโค้ด'}</p>
 
-      <button className="mybtn btn-normal" style={{marginTop:"30px"}} onClick={() => navigate(`/dorm/${id}/mypackage`)}>
+      <button className="mybtn" style={{marginTop:"30px"}} onClick={() => navigate(`/dorm/${id}/mypackage`)}>
         กลับไปหน้าพัสดุของฉัน
       </button>
     </div>

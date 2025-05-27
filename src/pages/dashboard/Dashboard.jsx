@@ -6,7 +6,7 @@ import api, { BASE_URL } from '../../utils/api';
 import UserQRCode from '../packager/userQRCode';
 import SendEmailButton from './SendEmailButton';
 import packagePic from '../../assets/package-large.png'
-import hotelPic from '../../../image/dorm1.png'
+import defaultPic from '../../assets/noimage.png'
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -60,11 +60,12 @@ const Dashboard = () => {
       <h2>หอพักของคุณ</h2>
 
       <div className="dorm-container">
+        {dorms.length == 0 && <p style={{textAlign:"center", width:"100%"}}>ขณะนี้คุณยังไม่มีหอพัก <br></br>คุณสามารถสร้างหรือเข้าร่วมหอพักได้ที่ปุ่ม "เมนู"</p>}
         {dorms.map(dorm => (
           <div className="dorm-card" key={dorm.id} onClick={() => navigate(`/dorm/${dorm.dormID}`)}>
             <div className="dorm-image">
 
-                <img src={(dorm.pathToPicture != '' && dorm.pathToPicture != undefined) ? `${BASE_URL}${dorm.pathToPicture}` : hotelPic}></img>
+                <img src={(dorm.pathToPicture != '' && dorm.pathToPicture != undefined) ? `${BASE_URL}${dorm.pathToPicture}` : defaultPic}></img>
 
             </div>
             <div className="dorm-info">

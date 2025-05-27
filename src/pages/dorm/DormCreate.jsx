@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
 import api from '../../utils/api';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const DormCreate = () => {
     const [formData, setFormData] = useState({
@@ -13,7 +15,9 @@ const DormCreate = () => {
     const defaultImage = '../../image/dorm1.jpg';
 
     const [image, setImage] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(defaultImage);
+    const [previewUrl, setPreviewUrl] = useState("");
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -36,7 +40,7 @@ const DormCreate = () => {
 
     const handleRemoveImage = () => {
         setImage(null);
-        setPreviewUrl(defaultImage);
+        setPreviewUrl("");
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -45,40 +49,52 @@ const DormCreate = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-      
+
         const { name, address, ownerName, phoneNo } = formData;
         if (!name || !address || !ownerName || !phoneNo) {
-          alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
-          return;
+            await Swal.fire({
+                icon: 'info',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'กรุณากรอกข้อมูลให้ครบ',
+            });
+            return;
         }
-      
+
         const formDataToSend = new FormData();
         formDataToSend.append('name', name);
         formDataToSend.append('address', address);
         formDataToSend.append('ownerName', ownerName);
         formDataToSend.append('phoneNo', phoneNo);
         if (image) {
-          formDataToSend.append('picture', image); 
+            formDataToSend.append('picture', image);
         }
-      
+
         try {
-          const res = await api.post('/dorm/create', formDataToSend, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-          alert('บันทึกสำเร็จ');
-          console.log(res.data);
+            const res = await api.post('/dorm/create', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            await Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: 'สร้างหอพักเรียบร้อย',
+            });
+            navigate('/dashboard');
         } catch (err) {
-          console.error('Error saving dorm:', err);
-          alert('เกิดข้อผิดพลาดในการบันทึก');
+            console.error('Error saving dorm:', err);
+            await Swal.fire({
+                icon: 'error',
+                title: 'ล้มเหลว',
+                text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+            });
         }
-      };
-      
+    };
+
 
     return (
         <div className="form-container">
-            
+
             <h2 className="form-title">สร้างหอพักใหม่</h2>
             <form onSubmit={handleSubmit} className="form">
                 <div className="form-group">
@@ -138,7 +154,7 @@ const DormCreate = () => {
                 </div>
 
                 <div className="form-group img-wrap">
-                    <img src={previewUrl} alt="dorm" className="img-preview" />
+                    {previewUrl && <img src={previewUrl} alt="dorm" className="img-preview" />}
                     {image && (
                         <button onClick={handleRemoveImage}>
                             ลบรูปภาพ
@@ -146,7 +162,7 @@ const DormCreate = () => {
                     )}
                 </div>
 
-                <button type="submit" className="form-button">บันทึก</button>
+                <button type="submit" className="mybtn btn-full-width btn-black" style={{ marginBottom: "50px" }}>บันทึก</button>
             </form>
         </div>
     );

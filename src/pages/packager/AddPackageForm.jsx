@@ -72,13 +72,13 @@ const AddPackageForm = () => {
         icon: 'success',
         showCancelButton: true,
         confirmButtonText: 'เพิ่มต่อ',
-        cancelButtonText: 'กลับหน้าข้อมูลหอพัก',
+        cancelButtonText: 'ไปหน้าพัสดุทั้งหมด',
       });
 
       if (result.isConfirmed) {
         navigate(-1);
       } else {
-        navigate(`/dorm/${dormID}/info`);
+        navigate(`/dorm/${dormID}/allpackage`);
       }
     } catch (err) {
       console.error('Error adding package:', err);
@@ -191,7 +191,6 @@ const AddPackageForm = () => {
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={(e) => {
                 if (e.target.files[0]) {
                   setImageFile(e.target.files[0]);

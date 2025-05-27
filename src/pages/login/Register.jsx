@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import api from '../../utils/api';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -14,17 +16,29 @@ const Register = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      await Swal.fire({
+        icon: 'info',
+        title: 'รหัสผ่านไม่ตรงกัน',
+        text: 'กรุณาตรวจสอบใหม่อีกครั้ง',
+      });
       return;
     }
 
     try {
       const res = await api.post('/user/register', { username, password, email });
-      alert('Registered successfully');
+      await Swal.fire({
+        icon: 'success',
+        title: 'สมัครสมาชิกสำเร็จ',
+        text: 'ยินดีต้อนรับเข้าสู่ระบบ',
+      });
       navigate('/dashboard');
     } catch (err) {
       console.error('Registration failed:', err);
-      alert("ERROR:\n" + err.response.data.message);
+      await Swal.fire({
+        icon: 'error',
+        title: 'ล้มเหลว',
+        text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+      });
     }
   };
 
@@ -78,7 +92,7 @@ const Register = () => {
         />
 
         <a onClick={() => navigate('/login')}>เข้าสู่ระบบ</a>
-        <button type="submit" className="login-button">Register</button>
+        <button type="submit" className="mybtn btn-full-width btn-black">Register</button>
       </form>
     </div>
   );

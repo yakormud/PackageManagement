@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faExclamation, faVideoSlash } from '@fortawesome/free-solid-svg-icons';
 import Swal from 'sweetalert2';
 
-const PackageScanner = ({ onClose, onDetected, isDeliverMode = false}) => {
+const PackageScanner = ({ onClose, onDetected, isDeliverMode = false, isBarcode = false}) => {
     const scannerRef = useRef(null);
     const [manualCode, setManualCode] = useState('');
     const [isScanning, setIsScanning] = useState(false);
@@ -30,7 +30,11 @@ const PackageScanner = ({ onClose, onDetected, isDeliverMode = false}) => {
                     , {
                         fps: 10,
                         qrbox: function (viewfinderWidth, viewfinderHeight) {
-                            return { width: 0.6 * viewfinderWidth, height: 0.2 * viewfinderHeight };
+                            if(isBarcode) {
+                                return { width: 0.6 * viewfinderWidth, height: 0.2 * viewfinderHeight };
+                            }else {
+                                return { width: 0.3 * viewfinderWidth, height: 0.3 * viewfinderWidth };
+                            }
                         }
                     }, (text) => {
                         qr.stop();

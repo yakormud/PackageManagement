@@ -19,13 +19,16 @@ const Layout = () => {
     <div className="page">
 
       <div className="navbar">
-        <FontAwesomeIcon icon={faBars} onClick={toggleSidebar} />
+        <div className='navbar-logo'>
+          <FontAwesomeIcon icon={faBars} onClick={toggleSidebar} />
+          <h4>เมนู</h4>
+        </div>
         <div className="navbar-profile">
           <p>{username}</p>
-          <img src={profilePic} onClick={() => {
+          <button className='mybtn btn-black' onClick={() => {
             logout();
             navigate('/login')
-          }}></img>
+          }}>ออกจากระบบ</button>
         </div>
       </div>
 

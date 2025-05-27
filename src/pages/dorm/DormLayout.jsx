@@ -48,7 +48,7 @@ const DormLayout = () => {
         </div>
 
         <div className='nav-link'>
-          {userRole === 'owner' ? (
+          {(userRole === 'owner' || userRole === 'admin') ? (
             <>
               <a onClick={() => navigate('./info')} className={`peel-tab ${isActive('info') ? 'peel-active' : ''}`}>ข้อมูลหอพัก</a>
               <a onClick={() => navigate('./qrinvite')} className={`peel-tab ${isActive('qrinvite') ? 'peel-active' : ''}`}>QR Code</a>

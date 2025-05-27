@@ -34,19 +34,36 @@ const DormRequest = () => {
     fetchRequests();
   }
 
+  function formatThaiDateTime(isoString) {
+    const date = new Date(isoString);
+    const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+    const day = thaiDate.getDate();
+    const month = thaiDate.getMonth();
+    const year = thaiDate.getFullYear() + 543;
+    const hours = thaiDate.getHours().toString().padStart(2, '0');
+    const minutes = thaiDate.getMinutes().toString().padStart(2, '0');
+
+    const thaiMonths = [
+      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+    ];
+
+    return `${day} ${thaiMonths[month]} ${year} ${hours}:${minutes} น.`;
+  }
+
   return (
     <div>
       <h2>คำขอเข้าร่วมหอพัก</h2>
       <div className="package-container">
+        {requests.length == 0 && <p style={{textAlign:"center"}}>ไม่พบเข้าร่วมหอพัก</p>}
         {requests.map((req) => (
           <div className="package-card" key={req.id}>
             <div className="package-image">
             </div>
             <div className="package-info">
-              <p><strong>หอพัก {req.dormID} ห้องพัก {req.roomID || '-'}</strong></p>
               <p>ชื่อผู้ขอ: {req.fullName}</p>
-              <p>วันที่: {new Date(req.date).toLocaleString()}</p>
-              <p>สถานะ: {req.status}</p>
+              <p>วันที่: {formatThaiDateTime(req.date)}</p>
             </div>
             <div className="package-action">
               <button className="go-button" onClick={() => handleModalShow(req.id)}>

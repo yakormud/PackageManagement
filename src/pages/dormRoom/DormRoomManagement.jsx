@@ -27,7 +27,7 @@ const DormRoomManagement = () => {
     <div>
       <div className="flex-between-menu">
         <h2>จัดการห้องพัก</h2>
-        <a onClick={() => setShowAddModal(true)}>เพิ่มห้องพัก</a>
+        <a onClick={() => setShowAddModal(true)} style={{cursor:"pointer"}}>เพิ่มห้องพัก</a>
       </div>
 
       {rooms.map(room => (

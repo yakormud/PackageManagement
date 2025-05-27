@@ -40,6 +40,7 @@ const AddPackage = () => {
         <PackageScanner
           onDetected={(code) => setTrackingNo(code)}
           onClose={() => navigate(-1)}
+          isBarcode = {true}
         />
       ) : (
         <div style={{ textAlign: 'center' }}>

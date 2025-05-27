@@ -11,11 +11,14 @@ const DormUserManagement = () => {
   const [selectedUser, setSelectedUser] = useState('');
   const [showModal, setShowModal] = useState(false);
 
+  const [search, setSearch] = useState("");
+
   const fetchUsers = async () => {
     try {
       const res = await api.post('/dorm-user/getByDormAndRole', {
         dormID: id,
         role: selectedRole,
+        search: search,
       });
       setUsers(res.data);
     } catch (err) {
@@ -25,13 +28,35 @@ const DormUserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [id, selectedRole]);
+  }, [id, selectedRole, search]);
+
+  const roleLabelMap = {
+    tenant: 'ผู้เช่าทั้งหมด',
+    package_manager: 'เจ้าหน้าที่พัสดุทั้งหมด',
+    admin: 'ผู้ดูแลทั้งหมด',
+  };
 
   return (
     <div>
       <h2>จัดการผู้ใช้งานในหอพัก</h2>
 
-      <div className="line-wrap">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', flex: '1' }}>
+          <label style={{ marginBottom: '4px' }}>
+            ค้นหา
+          </label>
+          <input
+            type="text"
+            className="myinput"
+            placeholder="🔍 ค้นด้วยชื่อ / หมายเลขห้อง"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="line-wrap" style={{ marginTop: "10px" }}>
         <div
           className={`line-item ${selectedRole === 'tenant' ? 'selected' : ''}`}
           onClick={() => setSelectedRole('tenant')}
@@ -52,15 +77,16 @@ const DormUserManagement = () => {
         </div>
       </div>
 
-      <h3>ผู้ใช้ทั้งหมด</h3>
+      <h3>{roleLabelMap[selectedRole] || 'ผู้ใช้ทั้งหมด'}</h3>
+      {users.length === 0 && <p style={{textAlign:"center"}}>ไม่พบข้อมูล</p>}
       {users.map((user) => (
         <div className="user-card" key={user.id}>
           <div className="user-info">
             <p>
-              {user.roomID ? <strong>{user.roomID}</strong> : null} {user.fullName}
+              {user.roomID ? <strong>{user.roomNo}</strong> : null} {user.fullName}
             </p>
           </div>
-          <div className="user-action" onClick={()=> {
+          <div className="user-action" onClick={() => {
             setSelectedUser(user.id);
             setShowModal(true)
           }}>
@@ -70,7 +96,7 @@ const DormUserManagement = () => {
       ))}
 
       {showModal &&
-        <UserEditModal id={selectedUser} onClose={()=> {
+        <UserEditModal id={selectedUser} onClose={() => {
           setShowModal(false)
           setSelectedUser('');
           fetchUsers()

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import api, { BASE_URL } from '../../utils/api';
 import { useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const PackageEditModal = ({ id, onClose }) => {
   const { id: dormID } = useParams();
@@ -54,20 +55,20 @@ const PackageEditModal = ({ id, onClose }) => {
   };
 
   const fetchPeople = async () => {
-  try {
-    const res = await api.get(`/dropdown/users/${dormID}`); 
-    setPeople(res.data);
-  } catch (err) {
-    console.error('Failed to fetch people:', err);
-  }
-};
+    try {
+      const res = await api.get(`/dropdown/users/${dormID}`);
+      setPeople(res.data);
+    } catch (err) {
+      console.error('Failed to fetch people:', err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  
+
   const handleImageChange = (e) => {
     setNewImage(e.target.files[0]);
     setDeleteImage(false); // ถ้าเลือกใหม่ ถือว่าไม่ลบ
@@ -86,7 +87,7 @@ const PackageEditModal = ({ id, onClose }) => {
     form.append('recipientRoomNo', formData.recipientRoomNo);
     form.append('trackingNo', formData.trackingNo);
     form.append('oldPath', formData.pathToPicture);
-    form.append('deleteImage', deleteImage); 
+    form.append('deleteImage', deleteImage);
     if (newImage) {
       form.append('image', newImage);
     }
@@ -96,11 +97,51 @@ const PackageEditModal = ({ id, onClose }) => {
       await api.post('/package/update', form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      await Swal.fire({
+        icon: 'success',
+        title: 'สำเร็จ',
+        text: 'อัพเดทข้อมูลเรียบร้อย',
+      });
       onClose();
     } catch (err) {
       console.error('Failed to update package:', err);
+      await Swal.fire({
+        icon: 'error',
+        title: 'ล้มเหลว',
+        text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+      });
     }
   };
+
+  const handleDelete = async () => {
+  const result = await Swal.fire({
+    title: 'ยืนยันการลบ',
+    text: 'คุณแน่ใจหรือไม่ว่าต้องการลบพัสดุชิ้นนี้?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ใช่, ลบเลย',
+    cancelButtonText: 'ยกเลิก',
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await api.delete(`/package/delete/${id}`);
+      await Swal.fire({
+        icon: 'success',
+        title: 'สำเร็จ',
+        text: 'ลบพัสดุเรียบร้อย',
+      });
+      onClose();
+    } catch (err) {
+      console.error('Submit error', err);
+      await Swal.fire({
+        icon: 'error',
+        title: 'ล้มเหลว',
+        text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+      });
+    }
+  }
+};
 
   return (
     <div className="modal-overlay">
@@ -137,7 +178,7 @@ const PackageEditModal = ({ id, onClose }) => {
                 ...prev,
                 recipientName: selected.value,
                 recipientID: -99,
-                recipientRoomNo: 'ไม่ระบุ', 
+                recipientRoomNo: 'ไม่ระบุ',
               }));
             } else {
               setFormData(prev => ({
@@ -198,11 +239,12 @@ const PackageEditModal = ({ id, onClose }) => {
           />
         )}
 
-        <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} />
+        <input type="file" accept="image/*" onChange={handleImageChange} />
 
         <div className="modal-actions">
-          <button onClick={onClose}>ยกเลิก</button>
-          <button onClick={handleSubmit}>ยืนยัน</button>
+          <button onClick={onClose} className='mybtn btn-white'>ยกเลิก</button>
+          <button onClick={handleDelete} className='mybtn btn-black'>ลบพัสดุ</button>
+          <button onClick={handleSubmit} className='mybtn'>ยืนยัน</button>
         </div>
       </div>
     </div>
