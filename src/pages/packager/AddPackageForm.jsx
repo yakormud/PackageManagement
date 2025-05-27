@@ -63,7 +63,7 @@ const AddPackageForm = () => {
       formData.append('recipientID', recipientID);
       formData.append('trackingNo', trackingNo);
       if (imageFile) {
-        const convertedFile = new File([file], file.name, { type: file.type });
+        const convertedFile = new File([imageFile], imageFile.name || 'photo.jpg', { type: imageFile.type || 'image/jpeg' });
         formData.append('image', convertedFile);
         await Swal.fire({
           title: 'รูปภาพถูกแนบ',
@@ -222,7 +222,7 @@ const AddPackageForm = () => {
             )}
           </div>
 
-          <button type="submit" className="mybtn" disabled={submitting}>
+          <button type="submit" className="mybtn btn-full-width" disabled={submitting} style={{paddingTop:"10px", marginBottom:"80px"}}>
             {submitting ? 'กำลังส่ง...' : 'เพิ่มพัสดุ'}
           </button>
         </form>
