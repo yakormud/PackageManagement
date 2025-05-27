@@ -36,8 +36,13 @@ const TenantPackage = () => {
   }, [id, selectedStatus, search, selectedDate]);
 
   function formatThaiDateTime(isoString) {
+    const isDev = import.meta.env.MODE === 'development';
     const date = new Date(isoString);
     const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+    if (!isDev) {
+      thaiDate.setHours(date.getHours() - 7);
+    }
 
     const day = thaiDate.getDate();
     const month = thaiDate.getMonth();

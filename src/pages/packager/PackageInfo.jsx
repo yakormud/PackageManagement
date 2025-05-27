@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api, { BASE_URL } from '../../utils/api';
+import defaultPic from '../../assets/noimage.png'
 
 const PackageInfo = ({ id, onClose }) => {
   const [pkg, setPkg] = useState(null);
@@ -19,8 +20,13 @@ const PackageInfo = ({ id, onClose }) => {
   if (!pkg) return null;
 
   function formatThaiDateTime(isoString) {
+    const isDev = import.meta.env.MODE === 'development';
     const date = new Date(isoString);
     const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+    if (!isDev) {
+      thaiDate.setHours(date.getHours() - 7);
+    }
 
     const day = thaiDate.getDate();
     const month = thaiDate.getMonth();
@@ -43,7 +49,7 @@ const PackageInfo = ({ id, onClose }) => {
 
         <div className="package-image">
           <img
-            src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : `${BASE_URL}/packages/default.png`}
+            src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : defaultPic}
             alt="package"
           />
         </div>

@@ -47,9 +47,9 @@ const MyPackage = () => {
                 setHasMore(true);
             }
 
-            if (!isLoadMore){
+            if (!isLoadMore) {
                 setOffset(limit);
-            }else {
+            } else {
                 setOffset(prev => prev + limit);
             }
 
@@ -61,7 +61,7 @@ const MyPackage = () => {
 
     useEffect(() => {
         console.log(packages)
-    },[packages])
+    }, [packages])
 
     const fetchDorms = async () => {
         try {
@@ -86,8 +86,13 @@ const MyPackage = () => {
     }, [selectedStatus, search, selectedDorm, date]);
 
     function formatThaiDateTime(isoString) {
+        const isDev = import.meta.env.MODE === 'development';
         const date = new Date(isoString);
         const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+        if (!isDev) {
+            thaiDate.setHours(date.getHours() - 7);
+        }
 
         const day = thaiDate.getDate();
         const month = thaiDate.getMonth();
@@ -104,9 +109,9 @@ const MyPackage = () => {
     }
 
     const closeInfo = () => {
-    setShowInfo(false)
-    setSelectInfo(null)
-  }
+        setShowInfo(false)
+        setSelectInfo(null)
+    }
 
     return (
         <div style={{ width: "100%" }}>
@@ -207,7 +212,7 @@ const MyPackage = () => {
                     </button>
                 )}
 
-                {showInfo && <PackageInfo id={selectInfo} onClose={closeInfo}/>}
+                {showInfo && <PackageInfo id={selectInfo} onClose={closeInfo} />}
             </div>
 
         </div>
