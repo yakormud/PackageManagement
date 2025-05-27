@@ -24,6 +24,7 @@ import TenantQRCode from './pages/packager/TenantQRCode';
 import AddPackage from './pages/packager/AddPackage';
 import Test from './pages/test/Test';
 import AddPackageForm from './pages/packager/AddPackageForm';
+import MyPackage from './pages/packager/MyPackage';
 
 const App = () => {
 
@@ -41,6 +42,7 @@ const App = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path='create-dorm' element={<DormCreate/>}/>
           <Route path='join-dorm' element={<DormJoin/>}/>
+          <Route path='mypackage' element={<MyPackage/>}/>
 
           <Route path="dorm/:id" element={<DormLayout />}>
             <Route index element={<Navigate to="./info"/>} /> 
