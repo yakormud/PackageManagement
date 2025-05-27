@@ -157,9 +157,9 @@ router.get('/getUserCode/:id', (req, res) => {
   });
 });
 
-router.post('/getUserCode', (req, res) => {
-  const { userID, id } = req.body;
-  const dormID = id;
+router.post('/getUserCode', authenticateToken, (req, res) => {
+  const { dormID } = req.body;
+  const userID = req.user.id;
 
   const query = `SELECT code FROM user_dorm WHERE userID = ? AND dormID = ? LIMIT 1`;
   database.query(query, [userID, dormID], (err, results) => {
