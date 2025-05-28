@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 const RequestModal = ({ id, handleCloseModal }) => {
 
   const [fullName, setFullName] = useState('');
-  const [dormID, setDormID] = useState(id);
+  const [dormID, setDormID] = useState(''); 
   const [role, setRole] = useState('');
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState('');
@@ -26,7 +26,7 @@ const RequestModal = ({ id, handleCloseModal }) => {
       const res = await api.get(`/request/${id}`);
       setFullName(res.data.fullName);
       setDormID(res.data.dormID);
-      setUserID(res.data.id);
+      setUserID(res.data.userID);
     } catch (err) {
       console.error('Failed to fetch full name from request:', err);
     }
@@ -59,6 +59,7 @@ const RequestModal = ({ id, handleCloseModal }) => {
         return;
       }
     }
+    console.log("UID: ", userID)
     try {
       await api.post('/dorm-user/addUser', {
         fullName,
