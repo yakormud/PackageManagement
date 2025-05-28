@@ -4,6 +4,14 @@ const database = require('../database');
 const authenticateToken = require('../middlewares/authenticateToken');
 
 
+function getThaiTimeString() {
+  const thaiTime = new Date().toLocaleString('sv-SE', {
+    timeZone: 'Asia/Bangkok',
+    hour12: false
+  });
+  return thaiTime.replace(' ', 'T');
+}
+
 router.post('/join', authenticateToken, (req, res) => {
   const { fullName, code } = req.body;
   const userID = req.user.id;
@@ -49,12 +57,13 @@ router.post('/join', authenticateToken, (req, res) => {
           return res.status(400).json({ message: 'คุณได้ส่งคำขอไปแล้ว' });
         }
 
+        const joinTime = getThaiTimeString();
         // ยังไม่มี request และยังไม่ได้อยู่ในหอ => แทรกคำขอได้
         const insertQuery = `
           INSERT INTO request (userID, fullName, date, status, dormID)
-          VALUES (?, ?, NOW(), 'not_accept', ?)`;
+          VALUES (?, ?, ?, 'not_accept', ?)`;
 
-        database.query(insertQuery, [userID, fullName, dormID], (err4, result4) => {
+        database.query(insertQuery, [userID, fullName, joinTime, dormID], (err4, result4) => {
           if (err4) {
             console.error(err4);
             return res.status(500).json({ message: 'Failed to save request' });
