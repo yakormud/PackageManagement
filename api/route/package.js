@@ -297,10 +297,10 @@ router.post('/getTenantPackage', authenticateToken, (req, res) => {
 router.post('/getByUserID', authenticateToken, (req, res) => {
   const userID = req.user.id;
   const query = `
-        SELECT package.*, dorm.name AS dormName
+        SELECT package.*, dorm.name AS dormName, dorm.isActive
         FROM package
         LEFT JOIN dormitory dorm ON package.dormID = dorm.id
-        WHERE recipientID = ? AND package.status = 'wait_for_deliver'
+        WHERE recipientID = ? AND package.status = 'wait_for_deliver' AND dorm.isActive = 1
         ORDER BY dormName
     `;
   database.query(query, [userID], (err, results) => {
@@ -316,10 +316,10 @@ router.post('/mypackage', authenticateToken, (req, res) => {
   const userID = req.user.id;
 
   let query = `
-        SELECT pkg.*, dorm.name AS dormName
+        SELECT pkg.*, dorm.name AS dormName, dorm.isActive
         FROM package pkg
         LEFT JOIN dormitory dorm ON pkg.dormID = dorm.id
-        WHERE pkg.recipientID = ? AND pkg.status = ?
+        WHERE pkg.recipientID = ? AND pkg.status = ? AND dorm.isActive = 1
         AND (
           pkg.trackingNo LIKE ?
         )
