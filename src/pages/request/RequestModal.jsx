@@ -9,6 +9,7 @@ const RequestModal = ({ id, handleCloseModal }) => {
   const [role, setRole] = useState('');
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState('');
+  const [userID, setUserID] = useState('');
 
   useEffect(() => {
     if (role === 'tenant') {
@@ -25,6 +26,7 @@ const RequestModal = ({ id, handleCloseModal }) => {
       const res = await api.get(`/request/${id}`);
       setFullName(res.data.fullName);
       setDormID(res.data.dormID);
+      setUserID(res.data.id);
     } catch (err) {
       console.error('Failed to fetch full name from request:', err);
     }
@@ -62,7 +64,7 @@ const RequestModal = ({ id, handleCloseModal }) => {
         fullName,
         role,
         roomID: role === 'tenant' ? selectedRoom : 0,
-        userID: 1,
+        userID: userID,
         dormID: dormID,
         requestID: id
       });
