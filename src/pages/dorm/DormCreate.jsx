@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 const DormCreate = () => {
     const [formData, setFormData] = useState({
-        name: 'A1',
-        address: 'ที่อยู่',
-        ownerName: 'นันทกร ลามอ',
-        phoneNo: '0912345678',
+        name: '',
+        address: '',
+        ownerName: '',
+        phoneNo: '',
     });
 
     const fileInputRef = useRef();
