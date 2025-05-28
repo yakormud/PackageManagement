@@ -42,6 +42,7 @@ async function generateUniqueUserCode(dormID) {
 
 router.post('/addUser', async (req, res) => {
   const { fullName, role, roomID, userID, dormID } = req.body;
+  console.log(req.body)
 
   //เช็คว่ามีไหม
   const checkQuery = 'SELECT id FROM user_dorm WHERE userID = ? AND dormID = ?';
@@ -259,6 +260,27 @@ router.post('/checkIfUserInDorm', (req, res) => {
       roomNo: results[0].roomNo,
       email: results[0].email
     });
+  });
+});
+
+//delete
+router.post('/deleteUser', (req, res) => {
+  const { id } = req.body;
+
+  const query = `
+    DELETE FROM user_dorm 
+    WHERE id = ?
+  `;
+
+  database.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Delete error:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User deleted successfully' });
   });
 });
 
