@@ -25,7 +25,7 @@ router.get('/users/:dormID', (req, res) => {
   const { dormID } = req.params;
   const sql = `
     SELECT 
-      ud.id AS userDormID,
+      ud.userID AS userDormID,
       ud.fullName,
       dr.roomNo,
       CONCAT(COALESCE(dr.roomNo, 'ไม่มีห้อง'), ' - ', ud.fullName) AS label
