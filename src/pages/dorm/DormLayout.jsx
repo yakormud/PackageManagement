@@ -56,7 +56,7 @@ const DormLayout = () => {
               <a onClick={() => navigate('./users')} className={`peel-tab ${isActive('users') ? 'peel-active' : ''}`}>จัดการผู้ใช้งานในหอพัก</a>
               <a onClick={() => navigate('./rooms')} className={`peel-tab ${isActive('rooms') ? 'peel-active' : ''}`}>จัดการห้องพัก</a>
             </>
-          ) : userRole === 'manager' ? (
+          ) : userRole === 'package_manager' ? (
             <>
               <a onClick={() => navigate('./info')} className={`peel-tab ${isActive('info') ? 'peel-active' : ''}`}>ข้อมูลหอพัก</a>
               <a onClick={() => navigate('./allpackage')} className={`peel-tab ${isActive('allpackage') ? 'peel-active' : ''}`}>รายการพัสดุทั้งหมด</a>
