@@ -83,6 +83,34 @@ const UserEditModal = ({ id, onClose }) => {
     }
   };
 
+  const handleDelete = async () => {
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบ',
+      text: 'คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งานนี้',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ใช่, ลบเลย',
+      cancelButtonText: 'ยกเลิก'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.post('/dorm-user/deleteUser', {
+          id: id
+        });
+        await Swal.fire('สำเร็จ', 'ผู้ใช้งานถูกลบเรียบร้อย', 'success');
+        onClose();
+      } catch (err) {
+        console.error('Failed to delete room:', err);
+        await Swal.fire({
+          icon: 'error',
+          title: 'ล้มเหลว',
+          text: err?.response?.data?.message || 'เกิดข้อผิดพลาด',
+        });
+      }
+    }
+  }
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -121,6 +149,7 @@ const UserEditModal = ({ id, onClose }) => {
 
         <div className="modal-actions">
           <button onClick={onClose} className='mybtn btn-white'>ยกเลิก</button>
+          <button onClick={handleDelete} className='mybtn btn-black'>ลบผู้ใช้</button>
           <button onClick={handleSubmit} className='mybtn'>ยืนยัน</button>
         </div>
       </div>
