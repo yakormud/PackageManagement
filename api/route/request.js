@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const database = require('../database');
+const authenticateToken = require('../middlewares/authenticateToken');
 
 
-router.post('/join', (req, res) => {
-  const { userID, fullName, code } = req.body;
+router.post('/join', authenticateToken, (req, res) => {
+  const { fullName, code } = req.body;
+  const userID = req.user.id;
 
   if (!userID || !fullName || !code) {
     return res.status(400).json({ message: 'Missing fields' });

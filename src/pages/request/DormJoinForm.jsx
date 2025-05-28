@@ -46,7 +46,6 @@ const handleSubmit = async (e) => {
 
   try {
     await api.post('/request/join', {
-      userID: 1,
       fullName,
       code
     });
