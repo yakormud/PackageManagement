@@ -189,7 +189,7 @@ const MyPackage = () => {
                             <img src={pkg.pathToPicture ? `${BASE_URL}${pkg.pathToPicture}` : defaultPic} alt="package" />
                         </div>
                         <div className="package-info">
-                            <p><strong>หอพัก {pkg.dormID} ห้องพัก {pkg.recipientRoomNo}</strong></p>
+                            <p><strong>หอพัก {pkg.dormName} ห้องพัก {pkg.recipientRoomNo}</strong></p>
                             <h3 style={{ color: "#191970" }}><FontAwesomeIcon icon={faBarcode} /> {pkg.trackingNo}</h3>
                             <p>เจ้าของพัสดุ: {pkg.recipientName}</p>
                             <p>
