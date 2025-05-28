@@ -35,6 +35,29 @@ const AddPackage = () => {
     checkPackage();
   }, [trackingNo]);
 
+  function formatThaiDateTime(isoString) {
+    const isDev = import.meta.env.MODE === 'development';
+    const date = new Date(isoString);
+    const thaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+
+    if (!isDev) {
+      date.setHours(date.getHours() - 7);
+    }
+
+    const day = thaiDate.getDate();
+    const month = thaiDate.getMonth();
+    const year = thaiDate.getFullYear() + 543;
+    const hours = thaiDate.getHours().toString().padStart(2, '0');
+    const minutes = thaiDate.getMinutes().toString().padStart(2, '0');
+
+    const thaiMonths = [
+      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+    ];
+
+    return `${day} ${thaiMonths[month]} ${year} ${hours}:${minutes} น.`;
+  }
+
   return (
     <div style={{ padding: 20 }} className='add-package-form'>
       {!trackingNo ? (
@@ -69,7 +92,7 @@ const AddPackage = () => {
                     <div className="package-info" style={{ marginTop: 10, textAlign: "start" }}>
                       <h3>{pkg.recipientRoomNo} | {pkg.recipientName}</h3>
                       <p><FontAwesomeIcon icon={faBarcode} /> {pkg.trackingNo}</p>
-                      <p>🗓️ เข้าสู่ระบบเมื่อ: {new Date(pkg.registerTime).toLocaleString()}</p>
+                      <p>🗓️ เข้าสู่ระบบเมื่อ: {formatThaiDateTime(pkg.registerTime)}</p>
                       <p>👤 เพิ่มโดย: {pkg.registerBy}</p>
                     </div>
                   </div>
