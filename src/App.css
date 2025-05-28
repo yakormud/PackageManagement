@@ -1007,6 +1007,18 @@ input[type="text"] {
   }
 }
 
+/* SAME PACKAGE BUTTON */
+.same-package-button {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+
+  .mybtn {
+    box-sizing: border-box;
+    height: fit-content;
+  }
+}
+
 /* LAPTOP */
 @media only screen and (max-width: 1440px) {}
 
@@ -1045,6 +1057,7 @@ input[type="text"] {
       background-color: transparent;
       padding-top: 0;
       padding: 0;
+
       input {
         font-size: 16px;
       }
@@ -1130,6 +1143,20 @@ input[type="text"] {
     position: absolute;
     top: 20px;
   }
+
+  .same-package-button {
+    flex-direction: column-reverse;
+    align-items: center;
+
+    .mybtn.btn-black {
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .mybtn.btn-white {
+      background-color: transparent;
+    }
+  }
 }
 
 @media only screen and (max-width: 512px) {
@@ -1154,7 +1181,8 @@ input[type="text"] {
       height: auto;
     }
   }
-  .room-edit-button .mybtn{
+
+  .room-edit-button .mybtn {
     padding: 8px 10px;
   }
 
@@ -1174,6 +1202,7 @@ input[type="text"] {
   }
 
   .scan-button-row {
+
     /* flex-direction: column; */
     .mybtn {
       /* width: 100%;
