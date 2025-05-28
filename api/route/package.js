@@ -89,7 +89,7 @@ router.post('/add', authenticateToken, (req, res) => {
 
     try {
       const userRole = await getRole(userID, dormID);
-      if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
+      if (!userRole || !['owner', 'package_manager'].includes(userRole.role)) {
         console.log("PERM DENY");
         return res.status(403).json({ message: 'Permission denied' });
       }
@@ -481,7 +481,7 @@ router.post('/deliverPackage', authenticateToken, async (req, res) => {
   }
 
   const userRole = await getRole(userID, dormID);
-  if (!userRole || !['owner', 'manager'].includes(userRole.role)) {
+  if (!userRole || !['owner', 'package_manager'].includes(userRole.role)) {
     return res.status(403).json({ message: 'Permission denied' });
   }
 
