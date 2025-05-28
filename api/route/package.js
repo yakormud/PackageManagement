@@ -26,18 +26,18 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 20 * 1024 * 1024 
+    fileSize: 20 * 1024 * 1024
   }
 });
 
 //gen code eiei
 function generateCode(length = 6) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
 
 function getThaiTimeString() {
@@ -503,9 +503,10 @@ router.post('/deliverPackage', authenticateToken, async (req, res) => {
         return res.status(500).json({ message: 'เกิดข้อผิดพลาด' });
       }
 
-      if (!email || email == "" || receiver == "ผู้ใช้ที่ไม่อยู่ในระบบ") {
-        console.log("CANT SEND EMAIL")
-        return;
+      console.log(receiver);
+      if (!email || email.trim() === "" || receiver === "ผู้ใช้ที่ไม่อยู่ในระบบ") {
+        console.log("CANT SEND EMAIL");
+        return res.status(200).json({ message: 'สำเร็จ' });
       }
 
       // ดึง trackingNo 
