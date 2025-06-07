@@ -14,7 +14,7 @@ connection.connect((err) => {
     console.error('MySQL connection error:', err);
     return;
   }
-  console.log('Connected to MySQL (Aiven)');
+  console.log(`Connected to MySQL database: ${process.env.DB_NAME}`);
 });
 
 module.exports = connection;
