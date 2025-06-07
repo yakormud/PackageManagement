@@ -350,8 +350,10 @@ html {
 }
 
 .sidebar li:hover {
-  background-color: #434343;
-  color: white;
+  background-color: #1a1a1a;
+  a {
+    color: white;
+  }
 }
 
 .sidebar a {
